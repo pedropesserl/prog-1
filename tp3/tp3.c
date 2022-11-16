@@ -23,23 +23,50 @@ void imprimir_vetor_racional(racional **vet, int tam) {
 }
 
 /* retorna um vetor de tam ponteiros para numeros racionais validos gerados aleatoriamente */
-/* retorna NULL em caso de falha                                                           */
+/* retorna NULL em caso de falha */
 racional **aleatorio_vetor_racional(int tam) {
 	racional **vet;
 	if ( !(vet = malloc(tam * sizeof(racional*))) )
 		return NULL;
 	int i;
-	for (i = 0; i < tam; i++) {
+	for (i = 0; i < tam; i++)
 		*(vet + i) = sortear_r();
-	}
 	return vet;
 }
 
+/* inverte dois ponteiros para racional */
+void inverte(racional *r1, racional *r2) {
+	racional temp = *r1;
+	*r1 = *r2;
+	*r2 = temp;
+}
+
 /* retorna um vetor de tam ponteiros para numeros racionais que apontam em ordem crescente para os 
- * racionais apontados pelo vetor recebido no parametro. Defina outras funcoes para te ajudar caso
- * ache necessario */
+ * racionais apontados pelo vetor recebido no parametro. */
+/* essa funcao eh uma implementacao do bubble sort */
 racional **ordenar_vetor_racional(racional **vet, int tam) {
-	
+	racional **ord;
+	if ( !(ord = malloc(tam * sizeof(racional*))) )
+		return NULL;
+
+	int i;
+	for (i = 0; i < tam; i++) {
+		*(ord + i) = criar_r();
+		*(ord + i) = *(vet + i);
+	}
+
+	int swaps = 1;
+	while (swaps) {
+		swaps = 0;
+		for (i = 0; i < tam-1; i++) {
+			if (menor_r(*(ord + i+1), *(ord + i))) {
+				inverte(*(ord + i+1), *(ord + i));
+				swaps++;
+			}
+		}
+	}
+
+	return ord;
 }
 
 /* libera a memoria alocada em um vetor vet de tam ponteiros para numeros racionais */
@@ -55,33 +82,32 @@ racional **liberar_vetor_racional(racional **vet, int tam) {
 }
 
 int main() {
+	/* inicializa semente randomica */
+	srand(0);
+
     racional **v, **w;
     /* v e w são vetores de ponteiros para racionais (racional *)
        alternativamente poderia ser declarado como racional *v[] */
     
     int tam;
-
-    /* inicializa semente randomica                            */
-    /* depois pode trocar para, por exemplo, srand (time (0)); */
-    srand(0);
-
     /* ler o tamanho do vetor de racionais */
     tam = ler_tamanho();
 
     /* aloca v com tam ponteiros para racional */
     v = aleatorio_vetor_racional(tam);
-    /*  lembre-se que a funcao acima retorna NULL em caso de falha */
+    /* a funcao acima retorna NULL em caso de falha */
 
     /* chama a funcao para ordenar o vetor */
     w = ordenar_vetor_racional(v, tam); 
-    /*  lembre-se que a funcao acima retorna 0 em caso de falha */
+    /* a funcao acima retorna NULL em caso de falha */
 
     /* imprime o vetor ordenado */
-    imprimir_vetor_racional(v, tam);
+	imprimir_vetor_racional(v, tam);
+    imprimir_vetor_racional(w, tam);
 
-    /* libera toda memoria alocada dinamicamente        */
-    /* nao esqueca de testar com valgrind para conferir */
+    /* libera toda memoria alocada dinamicamente */
 	v = liberar_vetor_racional(v, tam);
+	w = liberar_vetor_racional(w, tam);
 
     return 0;
 }
