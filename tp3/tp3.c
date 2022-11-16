@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "lib_racionais.h"
 #define MAX 100
 
@@ -8,6 +9,10 @@ int ler_tamanho() {
 	printf("Insira o tamanho do vetor (entre 1 e %d):\n", MAX);
 	int n;
 	scanf("%d", &n);
+	while (n < 1 || n > 100) {
+		printf("Por favor, insira um inteiro entre 1 e %d:\n", MAX);
+		scanf("%d", &n);
+	}
 	return n;
 }
 
@@ -18,8 +23,8 @@ void imprimir_vetor_racional(racional **vet, int tam) {
 		imprimir_r(*(vet + i));
 		printf(" ");
 	}
-	imprimir_r(*(vet + tam-1));
-	printf("\n");
+	imprimir_r(*(vet + tam-1));     /* por motivos de formatacao da saida, */
+	printf("\n");				    /* imprime o ultimo numero separadamente */
 }
 
 /* retorna um vetor de tam ponteiros para numeros racionais validos gerados aleatoriamente */
@@ -35,7 +40,7 @@ racional **aleatorio_vetor_racional(int tam) {
 }
 
 /* inverte dois ponteiros para racional */
-void inverte(racional **r1, racional **r2) {
+void inverte_ponteiros(racional **r1, racional **r2) {
 	racional *temp = *r1;
 	*r1 = *r2;
 	*r2 = temp;
@@ -58,7 +63,7 @@ racional **ordenar_vetor_racional(racional **vet, int tam) {
 		swaps = 0;
 		for (i = 0; i < tam-1; i++) {
 			if (menor_r(*(ord + i+1), *(ord + i))) {
-				inverte((ord + i+1), (ord + i));
+				inverte_ponteiros((ord + i+1), (ord + i));
 				swaps++;
 			}
 		}
@@ -66,7 +71,8 @@ racional **ordenar_vetor_racional(racional **vet, int tam) {
 	return ord;
 }
 
-/* libera a memoria alocada em um vetor vet de tam ponteiros para numeros racionais */
+/* libera a memoria alocada em um vetor vet de tam ponteiros para numeros racionais,
+ * e libera todos os ponteiros dentro dele */
 racional **liberar_vetor_racional(racional **vet, int tam) {
 	int i;
 	for (i = 0; i < tam; i++) {
@@ -80,11 +86,10 @@ racional **liberar_vetor_racional(racional **vet, int tam) {
 
 int main() {
 	/* inicializa semente randomica */
-	srand(0);
+	srand(time(0));
 
     racional **v, **w;
-    /* v e w são vetores de ponteiros para racionais (racional *)
-       alternativamente poderia ser declarado como racional *v[] */
+    /* v e w são vetores de ponteiros para racionais (racional *) */
     
     int tam;
     /* ler o tamanho do vetor de racionais */
@@ -107,4 +112,4 @@ int main() {
 	w = NULL;  /* racionais ja foram liberados na chamada de liberar_vetor_racional para v. */
 
     return 0;
-
+}
