@@ -35,8 +35,8 @@ racional **aleatorio_vetor_racional(int tam) {
 }
 
 /* inverte dois ponteiros para racional */
-void inverte(racional *r1, racional *r2) {
-	racional temp = *r1;
+void inverte(racional **r1, racional **r2) {
+	racional *temp = *r1;
 	*r1 = *r2;
 	*r2 = temp;
 }
@@ -48,10 +48,8 @@ racional **ordenar_vetor_racional(racional **vet, int tam) {
 	racional **ord;
 	if ( !(ord = malloc(tam * sizeof(racional*))) )
 		return NULL;
-
 	int i;
 	for (i = 0; i < tam; i++) {
-		*(ord + i) = criar_r();
 		*(ord + i) = *(vet + i);
 	}
 
@@ -60,12 +58,11 @@ racional **ordenar_vetor_racional(racional **vet, int tam) {
 		swaps = 0;
 		for (i = 0; i < tam-1; i++) {
 			if (menor_r(*(ord + i+1), *(ord + i))) {
-				inverte(*(ord + i+1), *(ord + i));
+				inverte((ord + i+1), (ord + i));
 				swaps++;
 			}
 		}
 	}
-
 	return ord;
 }
 
@@ -102,12 +99,12 @@ int main() {
     /* a funcao acima retorna NULL em caso de falha */
 
     /* imprime o vetor ordenado */
-	imprimir_vetor_racional(v, tam);
     imprimir_vetor_racional(w, tam);
 
     /* libera toda memoria alocada dinamicamente */
 	v = liberar_vetor_racional(v, tam);
-	w = liberar_vetor_racional(w, tam);
+	free(w);   /* o vetor w pode ser liberado normalmente, porque os ponteiros que apontam para numeros */
+	w = NULL;  /* racionais ja foram liberados na chamada de liberar_vetor_racional para v. */
 
     return 0;
-}
+
