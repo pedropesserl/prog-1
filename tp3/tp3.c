@@ -6,11 +6,11 @@
 
 /* le um inteiro na faixa [0..MAX-1] */
 int ler_tamanho() {
-	printf("Insira o tamanho do vetor (entre 1 e %d):\n", MAX);
+	printf("Insira o tamanho do vetor (entre 0 e %d):\n", MAX-1);
 	int n;
 	scanf("%d", &n);
-	while (n < 1 || n > 100) {
-		printf("Por favor, insira um inteiro entre 1 e %d:\n", MAX);
+	while (n < 0 || n > MAX-1) {
+		printf("Por favor, insira um inteiro entre 0 e %d:\n", MAX-1);
 		scanf("%d", &n);
 	}
 	return n;
@@ -93,8 +93,9 @@ int main() {
     
     int tam;
     /* ler o tamanho do vetor de racionais */
-    tam = ler_tamanho();
-
+    if (!(tam = ler_tamanho()))
+		return 0;  /* impede de passar 0 como um parametro para malloc */
+	
     /* aloca v com tam ponteiros para racional */
     v = aleatorio_vetor_racional(tam);
     /* a funcao acima retorna NULL em caso de falha */

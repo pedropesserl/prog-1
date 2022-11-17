@@ -10,10 +10,7 @@ typedef struct racional {
     int den;
 } racional;
 
-/* retorna um numero aleatorio entre min e max, inclusive.
- * a rigor esta funcao poderia estar em outro arquivo, mas
- * deixamos aqui para nao complicar demais
-*/
+/* retorna um numero aleatorio entre min e max, inclusive. */
 int aleat (int min, int max);
 
 /* cria um racional sem valores atribuidos, so aloca o espaco */
@@ -43,26 +40,26 @@ int mmc (int a, int b);
 /* retorna 1 se o racional r eh valido ou 0 caso contrario */
 int valido_r (racional *r);
 
-/* simplifica um racional para o menor denominador possivel */
-/* caso o racional seja da forma n/n, retorna 1             */
+/* simplifica um racional para o menor denominador possivel   */
+/* caso o racional seja da forma n/n, simplifica ele para 1/1 */
 void simplifica_r (racional *r);
 
 /* retorna 1 caso *r1 seja menor do que *r2 */
-int menor_r (racional *r1, racional *r);
+int menor_r (racional *r1, racional *r2);
 
 /* retorna 1 caso os racionais *r1 e *r2 sejam iguais ou 0 caso contrario */
-int iguais_r (racional *r1, racional *r);
+int iguais_r (racional *r1, racional *r2);
 
-/* soma dois racionais e devolve um ponteiro para o resultado */
-/* retorna NULL em qualquer caso de falha                     */
+/* soma dois racionais e devolve um ponteiro para o resultado       */
+/* retorna NULL em qualquer caso de falha, por consistencia com dividir */
 racional *somar_r (racional *r1, racional *r2);
 
-/* subtrai dois racionais e devolve um ponteiro para o resultado */
-/* retorna NULL em qualquer caso de falha                        */
+/* subtrai dois racionais e devolve um ponteiro para o resultado    */
+/* retorna NULL em qualquer caso de falha, por consistencia com dividir */
 racional *subtrair_r (racional *r1, racional *r2);
 
-/* multiplica dois racionais e devolve um ponteiro o resultado */
-/* retorna NULL em qualquer caso de falha                      */
+/* multiplica dois racionais e devolve um ponteiro o resultado      */
+/* retorna NULL em qualquer caso de falha, por consistencia com dividir */
 racional *multiplicar_r (racional *r1, racional *r2);
 
 /* divide dois racionais e devolve um ponteiro para resultado */

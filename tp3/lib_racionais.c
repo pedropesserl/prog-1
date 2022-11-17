@@ -73,23 +73,23 @@ int valido_r(racional *r) {
 
 void simplifica_r(racional *r) {
 	int fator = mdc(r->num, r->den);
-	if(fator) {
+	if (fator) {
 		r->num /= fator;
 		r->den /= fator;
 	}
 }
 
-int menor_r(racional *r1, racional *r) {
-	int a = r1->num * r->den;
-	int b = r1->den * r->num;
+int menor_r(racional *r1, racional *r2) {
+	int a = r1->num * r2->den;
+	int b = r1->den * r2->num;
 	if (a < b)
 		return 1;
 	return 0;
 }
 
-int iguais_r(racional *r1, racional *r) {
-	int a = r1->num * r->den;
-	int b = r1->den * r->num;
+int iguais_r(racional *r1, racional *r2) {
+	int a = r1->num * r2->den;
+	int b = r1->den * r2->num;
 	if (a == b)
 		return 1;
 	return 0;
