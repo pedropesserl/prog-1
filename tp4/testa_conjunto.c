@@ -6,6 +6,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "lib_conjunto.h"
 #define TAM 21
 

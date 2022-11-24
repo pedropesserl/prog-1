@@ -81,7 +81,7 @@ conjunto_t *diferenca_cjt (conjunto_t *c1, conjunto_t *c2);
 conjunto_t *interseccao_cjt (conjunto_t *c1, conjunto_t *c2);
 
 /*
- * Cria e retorna o conjunto uniao entre os conjunto c1 e c2.
+ * Cria e retorna o conjunto uniao entre os conjuntos c1 e c2.
  * Retorna NULL se a operacao falhou.
  */
 conjunto_t *uniao_cjt (conjunto_t *c1, conjunto_t *c2);

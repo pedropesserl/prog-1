@@ -8,16 +8,16 @@ CC = gcc
 # arquivos-objeto
 	objects = testa_conjunto.o lib_conjunto.o 
      
-all: tp4.o lib_conjunto.o
-	$(CC) -o tp4 tp4.o lib_conjunto.o $(LDFLAGS)
+all: testa_conjunto.o lib_conjunto.o
+	$(CC) -o testa_conjunto testa_conjunto.o lib_conjunto.o $(LDFLAGS)
 
 lib_conjunto.o: lib_conjunto.c
 	$(CC) -c $(CFLAGS) lib_conjunto.c
 
 tp4.o: tp4.c
-	$(CC) -c $(CFLAGS) tp4.c
+	$(CC) -c $(CFLAGS) testa_conjunto.c
 
 clean:
-	rm -f $(objects) tp4
+	rm -f $(objects)
 
 
