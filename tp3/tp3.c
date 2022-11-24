@@ -67,6 +67,7 @@ racional **ordenar_vetor_racional(racional **vet, int tam) {
 				swaps++;
 			}
 		}
+		tam--;
 	}
 	return ord;
 }
