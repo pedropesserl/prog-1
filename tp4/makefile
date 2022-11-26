@@ -15,7 +15,7 @@ lib_conjunto.o: lib_conjunto.c
 	$(CC) -c $(CFLAGS) lib_conjunto.c
 
 tp4.o: tp4.c
-	$(CC) -c $(CFLAGS) testa_conjunto.c
+	$(CC) -c $(CFLAGS) tp4.c
 
 clean:
 	rm -f $(objects)

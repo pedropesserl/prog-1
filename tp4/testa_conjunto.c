@@ -7,10 +7,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "lib_conjunto.h"
 #define TAM 21
 
 int main (void) {
+	srand(time(0));
     conjunto_t *a, *b, *u, *i, *d, *d1, *copia, *sub;
     int k, ex;
 
