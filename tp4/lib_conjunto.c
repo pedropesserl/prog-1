@@ -26,7 +26,6 @@ conjunto_t *cria_cjt(int max) {
 }
 
 conjunto_t *destroi_cjt(conjunto_t *c) {
-	c->card = 0;
 	free(c->v);
 	c->v = NULL;
 	free(c);
