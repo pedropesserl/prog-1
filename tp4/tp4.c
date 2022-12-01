@@ -55,14 +55,14 @@ conjunto_t *acha_solucao(conjunto_t **herois, conjunto_t *missao, conjunto_t **e
 	for (i = 0; i < tam_equipes; i++) {
 		uniao = copia_cjt(herois[equipes[i]->v[0] - 1]);
 		/* copia o conjunto de habilidades de heroi	correspondente ao primeiro elemento do conjunto equipe da posicao atual do vetor de equipes. ex: se a equipe atual é [5 6 7], copia o quinto conjunto de habilidades de heroi (de indice 4). */
-		for (j = 1; j < equipes[i]->card; j++) {
+		for (j = 1; j < cardinalidade_cjt(equipes[i]); j++) {
 			uniao_old = uniao;
 			uniao = uniao_cjt(uniao, herois[equipes[i]->v[j] - 1]);
 			uniao_old = destroi_cjt(uniao_old);
 		}
 			/* realiza a uniao de todos os conjuntos de habilidades de heroi referenciados no conjunto equipe da posicao atual do vetor de equipes. */
 		if (contido_cjt(missao, uniao)) {
-			if (vazio_cjt(menor) || equipes[i]->card < menor->card) {
+			if (vazio_cjt(menor) || cardinalidade_cjt(equipes[i]) < cardinalidade_cjt(menor)) {
 				menor = destroi_cjt(menor);
 				menor = copia_cjt(equipes[i]);
 			}
