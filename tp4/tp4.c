@@ -23,7 +23,7 @@ conjunto_t **le_vetor_conjuntos(int *tam, int max) {
 	int n, m;
 	scanf("%d", &n);
 	while (n) {
-		if ( !(vetor_c[*tam] = cria_cjt(10)) )
+		if ( !(vetor_c[*tam] = cria_cjt(15)) )
 			return NULL;
 		insere_cjt(vetor_c[*tam], n);
 		scanf("%d", &m);
@@ -47,7 +47,7 @@ conjunto_t **libera_vetor_conjuntos(conjunto_t **vetor_c, int tam) {
 
 conjunto_t *acha_solucao(conjunto_t **herois, conjunto_t *missao, conjunto_t **equipes, int tam_equipes) {
 	conjunto_t *menor;
-	menor = cria_cjt(10);
+	menor = cria_cjt(15);
 	conjunto_t *uniao_old;
 	conjunto_t *uniao;
 	int i, j;
@@ -59,8 +59,8 @@ conjunto_t *acha_solucao(conjunto_t **herois, conjunto_t *missao, conjunto_t **e
 			uniao_old = uniao;
 			uniao = uniao_cjt(uniao, herois[equipes[i]->v[j] - 1]);
 			uniao_old = destroi_cjt(uniao_old);
-		}
 			/* realiza a uniao de todos os conjuntos de habilidades de heroi referenciados no conjunto equipe da posicao atual do vetor de equipes. */
+		}
 		if (contido_cjt(missao, uniao)) {
 			if (vazio_cjt(menor) || cardinalidade_cjt(equipes[i]) < cardinalidade_cjt(menor)) {
 				menor = destroi_cjt(menor);

@@ -138,23 +138,30 @@ conjunto_t *uniao_cjt(conjunto_t *c1, conjunto_t *c2) {
 	conjunto_t **menor_cjt = cardinalidade_cjt(c1) < cardinalidade_cjt(c2) ? &c1 : &c2;
 	conjunto_t **maior_cjt = cardinalidade_cjt(c1) > cardinalidade_cjt(c2) ? &c1 : &c2;
 	
-	while (c1->ptr < cardinalidade_cjt(c1) && c2->ptr < cardinalidade_cjt(c2)) {
-		if (c1->v[c1->ptr] == c2->v[c2->ptr]) {
-			insere_cjt(uniao, c1->v[c1->ptr]);
-			c1->ptr++;
-			c2->ptr++;
-		} else {
-			if (c1->v[c1->ptr] < c2->v[c2->ptr]) {
-				insere_cjt(uniao, c1->v[c1->ptr]);
-				c1->ptr++;
-			} else {
-				insere_cjt(uniao, c2->v[c2->ptr]);
-				c2->ptr++;
-			}
-		}
-	}
+	/* while (c1->ptr < cardinalidade_cjt(c1) && c2->ptr < cardinalidade_cjt(c2)) { */
+	/* 	if (c1->v[c1->ptr] == c2->v[c2->ptr]) { */
+	/* 		insere_cjt(uniao, c1->v[c1->ptr]); */
+	/* 		c1->ptr++; */
+	/* 		c2->ptr++; */
+	/* 	} else { */
+	/* 		if (c1->v[c1->ptr] < c2->v[c2->ptr]) { */
+	/* 			insere_cjt(uniao, c1->v[c1->ptr]); */
+	/* 			c1->ptr++; */
+	/* 		} else { */
+	/* 			insere_cjt(uniao, c2->v[c2->ptr]); */
+	/* 			c2->ptr++; */
+	/* 		} */
+	/* 	} */
+	/* } */
+	
+	/* TODO: arrumar isso aqui de cima ^ e apagar isso aqui de baixo v */
 
 	int i;
+	for (i = 0; i < cardinalidade_cjt(*menor_cjt); i++) {
+		insere_cjt(uniao, c1->v[i]);
+		insere_cjt(uniao, c2->v[i]);
+	}
+	
 	for (i = cardinalidade_cjt(*menor_cjt); i < cardinalidade_cjt(*maior_cjt); i++) {
 		insere_cjt(uniao, (*maior_cjt)->v[i]);
 	}
