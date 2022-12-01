@@ -7,10 +7,10 @@
  * se o elemento nao esta no conjunto, retorna -1. */
 int busca_cjt(conjunto_t *c, int elemento) {
 	int pos = 0;
-	while (pos < c->card && c->v[pos] != elemento)
+	while (pos < cardinalidade_cjt(c) && c->v[pos] != elemento)
 		pos++;
 
-	return pos >= c->card ? -1 : pos;
+	return pos >= cardinalidade_cjt(c) ? -1 : pos;
 }
 
 conjunto_t *cria_cjt(int max) {
@@ -20,8 +20,10 @@ conjunto_t *cria_cjt(int max) {
 	c->max = max;
 	c->card = 0;
 	c->ptr = 0;
-	if ( !(c->v = malloc(sizeof(int) * max)) )
+	if ( !(c->v = malloc(sizeof(int) * max)) ) {
+		free(c);
 		return NULL;
+	}
 	return c;
 }
 
@@ -33,7 +35,7 @@ conjunto_t *destroi_cjt(conjunto_t *c) {
 }
 
 int vazio_cjt(conjunto_t *c) {
-	return c->card == 0;	
+	return cardinalidade_cjt(c) == 0;	
 }
 
 int cardinalidade_cjt(conjunto_t *c) {
@@ -41,13 +43,13 @@ int cardinalidade_cjt(conjunto_t *c) {
 }
 
 int insere_cjt(conjunto_t *c, int elemento) {
-	if (c->card == c->max)
+	if (cardinalidade_cjt(c) == c->max)
 		return 0;
 
 	if (pertence_cjt(c, elemento))
 		return 1;
 
-	c->v[c->card] = elemento;
+	c->v[cardinalidade_cjt(c)] = elemento;
 	c->card++;
 	return 1;
 }
@@ -58,7 +60,7 @@ int retira_cjt(conjunto_t *c, int elemento) {
 		return 0;
 
 	int i;
-	for(i = pos; i < c->card-1; i++) {
+	for(i = pos; i < cardinalidade_cjt(c)-1; i++) {
 		c->v[i] = c->v[i + 1];
 	}
 
@@ -72,7 +74,7 @@ int pertence_cjt(conjunto_t *c, int elemento) {
 
 int contido_cjt(conjunto_t *c1, conjunto_t *c2) {
 	int i;
-	for (i = 0; i < c1->card; i++) {
+	for (i = 0; i < cardinalidade_cjt(c1); i++) {
 		if (!(pertence_cjt(c2, c1->v[i])))
 			return 0;
 	}
@@ -80,7 +82,7 @@ int contido_cjt(conjunto_t *c1, conjunto_t *c2) {
 }
 
 int sao_iguais_cjt(conjunto_t *c1, conjunto_t *c2) {
-	return c1->card == c2->card && contido_cjt(c1, c2);
+	return cardinalidade_cjt(c1) == cardinalidade_cjt(c2) && contido_cjt(c1, c2);
 }
 
 conjunto_t *diferenca_cjt(conjunto_t *c1, conjunto_t *c2) {
@@ -89,7 +91,7 @@ conjunto_t *diferenca_cjt(conjunto_t *c1, conjunto_t *c2) {
 		return NULL;
 
 	int i;
-	for (i = 0; i < c1->card; i++) {
+	for (i = 0; i < cardinalidade_cjt(c1); i++) {
 		if (!(pertence_cjt(c2, c1->v[i])))
 			insere_cjt(dif, c1->v[i]);
 	}
@@ -103,7 +105,7 @@ conjunto_t *interseccao_cjt(conjunto_t *c1, conjunto_t *c2) {
 		return NULL;
 	
 	int i;
-	for (i = 0; i < c1->card; i++) {
+	for (i = 0; i < cardinalidade_cjt(c1); i++) {
 		if (pertence_cjt(c2, c1->v[i]))
 			insere_cjt(inter, c1->v[i]);
 	}
@@ -118,16 +120,16 @@ conjunto_t *uniao_cjt(conjunto_t *c1, conjunto_t *c2) {
 
 	/* para nao ter que alocar um conjunto novo, a funcao usa ponteiros para
 	 * ponteiro de conjunto */
-	conjunto_t **menor_cjt = c1->card < c2->card ? &c1 : &c2;
-	conjunto_t **maior_cjt = c1->card > c2->card ? &c1 : &c2;
+	conjunto_t **menor_cjt = cardinalidade_cjt(c1) < cardinalidade_cjt(c2) ? &c1 : &c2;
+	conjunto_t **maior_cjt = cardinalidade_cjt(c1) > cardinalidade_cjt(c2) ? &c1 : &c2;
 
 	int i;
-	for (i = 0; i < (*menor_cjt)->card; i++) {
+	for (i = 0; i < cardinalidade_cjt(*menor_cjt); i++) {
 		insere_cjt(uniao, c1->v[i]);
 		insere_cjt(uniao, c2->v[i]);
 	}
 
-	for (; i < (*maior_cjt)->card; i++)
+	for (; i < cardinalidade_cjt(*maior_cjt); i++)
 		insere_cjt(uniao, (*maior_cjt)->v[i]);
 
 	return uniao;
@@ -139,7 +141,7 @@ conjunto_t *copia_cjt(conjunto_t *c) {
 		return NULL;
 
 	int i;
-	for (i = 0; i < c->card; i++) {
+	for (i = 0; i < cardinalidade_cjt(c); i++) {
 		insere_cjt(copia, c->v[i]);
 	}
 
@@ -147,7 +149,7 @@ conjunto_t *copia_cjt(conjunto_t *c) {
 }
 
 conjunto_t *cria_subcjt_cjt(conjunto_t *c, int n) {
-	if (n >= c->card)
+	if (n >= cardinalidade_cjt(c))
 		return copia_cjt(c);
 
 	conjunto_t *sub;
@@ -161,7 +163,7 @@ conjunto_t *cria_subcjt_cjt(conjunto_t *c, int n) {
 	int i;
 	int aleat;
 	for (i = 0; i < n; i++) {
-		aleat = rand() % disponiveis->card;
+		aleat = rand() % cardinalidade_cjt(disponiveis);
 		insere_cjt(sub, disponiveis->v[aleat]);
 		retira_cjt(disponiveis, disponiveis->v[aleat]);
 	}
@@ -183,7 +185,7 @@ conjunto_t *ordena_cjt(conjunto_t *c) {
 	if ( !(ord = copia_cjt(c)) )
 		return NULL;
 
-	int tam = ord->card;
+	int tam = cardinalidade_cjt(ord);
 	int trocou = 1;
 	int i;
 	while (trocou) { 	/* trocou eh uma flag para sair do loop quando ja */
@@ -212,9 +214,9 @@ void imprime_cjt(conjunto_t *c) {
 	}
 
 	int i;
-	for (i = 0; i < ord->card-1; i++)
+	for (i = 0; i < cardinalidade_cjt(ord)-1; i++)
 		printf("%d ", ord->v[i]);
-	printf("%d\n", ord->v[ord->card-1]);
+	printf("%d\n", ord->v[cardinalidade_cjt(ord)-1]);
 	
 	destroi_cjt(ord);
 }
@@ -226,16 +228,16 @@ void inicia_iterador_cjt(conjunto_t *c) {
 int incrementa_iterador_cjt(conjunto_t *c, int *ret_iterador) {
 	*ret_iterador = c->v[c->ptr];
 	c->ptr++;
-	if (c->ptr > c->card)
+	if (c->ptr > cardinalidade_cjt(c))
 		return 0;
 	return 1;
 }
 
 int retira_um_elemento_cjt(conjunto_t *c) {
-	int aleat = rand() % c->card;
+	int aleat = rand() % cardinalidade_cjt(c);
 	int retirar = c->v[aleat];
 	int i;
-	for (i = aleat; i < c->card-1; i++)
+	for (i = aleat; i < cardinalidade_cjt(c)-1; i++)
 		c->v[i] = c->v[i + 1];
 	c->card--;
 	return retirar;
