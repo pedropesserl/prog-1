@@ -3,14 +3,23 @@
 #include "lib_conjunto.h"
 
 /* retorna a posicao de um elemento em um conjunto ([0..card-1]).
- * como um conjunto nao necessariamente eh ordenado, eh uma busca linear.
+ * como estamos trabalhando com conjuntos ordenados, eh uma busca binaria.
  * se o elemento nao esta no conjunto, retorna -1. */
 int busca_cjt(conjunto_t *c, int elemento) {
-	int pos = 0;
-	while (pos < cardinalidade_cjt(c) && c->v[pos] != elemento)
-		pos++;
+	int inicio = 0;
+	int fim = cardinalidade_cjt(c) - 1;
+	int meio = fim / 2;
 
-	return pos >= cardinalidade_cjt(c) ? -1 : pos;
+	while (inicio <= fim && c->v[meio] != elemento) {
+		if (elemento > c->v[meio]) {
+			inicio = meio + 1;
+		} else {
+			fim = meio - 1;
+		}
+		meio = (inicio + fim) / 2;
+	}
+
+	return inicio > fim ? -1 : meio;
 }
 
 conjunto_t *cria_cjt(int max) {
@@ -49,18 +58,23 @@ int insere_cjt(conjunto_t *c, int elemento) {
 	if (pertence_cjt(c, elemento))
 		return 1;
 
-	c->v[cardinalidade_cjt(c)] = elemento;
+	int i = cardinalidade_cjt(c);
+	while (i > 0 && c->v[i - 1] > elemento) {
+		c->v[i] = c->v[i - 1];
+		i--;
+	}
+	
+	c->v[i] = elemento;
 	c->card++;
 	return 1;
 }
 
 int retira_cjt(conjunto_t *c, int elemento) {
-	int pos = busca_cjt(c, elemento);
-	if (pos == -1)
+	if (!(pertence_cjt(c, elemento)))
 		return 0;
 
 	int i;
-	for(i = pos; i < cardinalidade_cjt(c)-1; i++) {
+	for(i = busca_cjt(c, elemento); i < cardinalidade_cjt(c)-1; i++) {
 		c->v[i] = c->v[i + 1];
 	}
 
@@ -104,10 +118,13 @@ conjunto_t *interseccao_cjt(conjunto_t *c1, conjunto_t *c2) {
 	if ( !(inter = cria_cjt(c1->max)) )
 		return NULL;
 	
+	conjunto_t **menor_cjt = cardinalidade_cjt(c1) < cardinalidade_cjt(c2) ? &c1 : &c2;
+	conjunto_t **maior_cjt = cardinalidade_cjt(c1) > cardinalidade_cjt(c2) ? &c1 : &c2;
+
 	int i;
-	for (i = 0; i < cardinalidade_cjt(c1); i++) {
-		if (pertence_cjt(c2, c1->v[i]))
-			insere_cjt(inter, c1->v[i]);
+	for (i = 0; i < cardinalidade_cjt(*menor_cjt); i++) {
+		if (pertence_cjt(*maior_cjt, (*menor_cjt)->v[i]))
+			insere_cjt(inter, (*menor_cjt)->v[i]);
 	}
 
 	return inter;
@@ -118,19 +135,32 @@ conjunto_t *uniao_cjt(conjunto_t *c1, conjunto_t *c2) {
 	if ( !(uniao = cria_cjt(c1->max)) )
 		return NULL;
 
-	/* para nao ter que alocar um conjunto novo, a funcao usa ponteiros para
-	 * ponteiro de conjunto */
 	conjunto_t **menor_cjt = cardinalidade_cjt(c1) < cardinalidade_cjt(c2) ? &c1 : &c2;
 	conjunto_t **maior_cjt = cardinalidade_cjt(c1) > cardinalidade_cjt(c2) ? &c1 : &c2;
-
-	int i;
-	for (i = 0; i < cardinalidade_cjt(*menor_cjt); i++) {
-		insere_cjt(uniao, c1->v[i]);
-		insere_cjt(uniao, c2->v[i]);
+	
+	while (c1->ptr < cardinalidade_cjt(c1) && c2->ptr < cardinalidade_cjt(c2)) {
+		if (c1->v[c1->ptr] == c2->v[c2->ptr]) {
+			insere_cjt(uniao, c1->v[c1->ptr]);
+			c1->ptr++;
+			c2->ptr++;
+		} else {
+			if (c1->v[c1->ptr] < c2->v[c2->ptr]) {
+				insere_cjt(uniao, c1->v[c1->ptr]);
+				c1->ptr++;
+			} else {
+				insere_cjt(uniao, c2->v[c2->ptr]);
+				c2->ptr++;
+			}
+		}
 	}
 
-	for (; i < cardinalidade_cjt(*maior_cjt); i++)
+	int i;
+	for (i = cardinalidade_cjt(*menor_cjt); i < cardinalidade_cjt(*maior_cjt); i++) {
 		insere_cjt(uniao, (*maior_cjt)->v[i]);
+	}
+
+	inicia_iterador_cjt(c1);
+	inicia_iterador_cjt(c2);
 
 	return uniao;
 }
@@ -172,53 +202,16 @@ conjunto_t *cria_subcjt_cjt(conjunto_t *c, int n) {
 	return sub;
 }
 
-/* funcao auxiliar para a ordenacao */
-void troca(int *a, int *b) {
-	int temp = *a;
-	*a = *b;
-	*b = temp;
-}
-
-/* implementacao do bubble sort */
-conjunto_t *ordena_cjt(conjunto_t *c) {
-	conjunto_t *ord;
-	if ( !(ord = copia_cjt(c)) )
-		return NULL;
-
-	int tam = cardinalidade_cjt(ord);
-	int trocou = 1;
-	int i;
-	while (trocou) { 	/* trocou eh uma flag para sair do loop quando ja */
-		trocou = 0;		/* estiver ordenado (nao trocou = ordenado)       */
-		for (i = 0; i < tam-1; i++) {
-			if (ord->v[i+1] < ord->v[i]) {
-				troca(&ord->v[i+1], &ord->v[i]);
-				trocou = 1;
-			}
-		}
-		tam--;
-	}
-	return ord;
-}
-
 void imprime_cjt(conjunto_t *c) {
 	if (vazio_cjt(c)) {
 		printf("Conjunto vazio.\n");
 		return;
 	}
 
-	conjunto_t *ord;
-	if ( !(ord = ordena_cjt(c)) ) {
-		printf("Erro na alocacao do conjunto.");
-		return;
-	}
-
 	int i;
-	for (i = 0; i < cardinalidade_cjt(ord)-1; i++)
-		printf("%d ", ord->v[i]);
-	printf("%d\n", ord->v[cardinalidade_cjt(ord)-1]);
-	
-	destroi_cjt(ord);
+	for (i = 0; i < cardinalidade_cjt(c)-1; i++)
+		printf("%d ", c->v[i]);
+	printf("%d\n", c->v[cardinalidade_cjt(c)-1]);
 }
 
 void inicia_iterador_cjt(conjunto_t *c) {
