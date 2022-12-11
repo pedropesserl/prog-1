@@ -1,25 +1,29 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <math.h>
 #include "libpilha.h"
 
-typedef double t_operador;
+/* Definindo o valor do operador como um inteiro, prevenimos
+   erros de aritmética com ponto flutuante. */
+typedef int t_operador;
 
 #define TAM_ENTRADA 256
 #define TAM_PILHA 1024
 
 
 /* Constantes com valores para identificar os operadores. O valor 
-   antes do ponto flutuante difine a precedencia entre os operadores, 
+   antes da casa da unidade define a precedencia entre os operadores, 
    valores maiores tem maior precedencia. */
-#define SOM 10.1
-#define SUB 10.2
-#define MUL 20.1
-#define DIV 20.2
+#define SOM 101
+#define SUB 102
+#define MUL 201
+#define DIV 202
+#define EXP 300
 
 
 /* Identificador de '(' para ser empilhado na pilha de operadores */
-#define PAR 99.0
+#define PAR 990
 
 
 /* Converte os caracteres que representam os operadores na entrada
@@ -32,6 +36,7 @@ int converte_operador(t_operador *op, char c) {
 		case '-': *op = SUB; break;
 		case '*': *op = MUL; break;
 		case '/': *op = DIV; break;
+		case '^': *op = EXP; break;
 		default : return 0;
 	}
     return 1;
@@ -41,7 +46,7 @@ int converte_operador(t_operador *op, char c) {
 /* Retorna 1 se o operador op1 tem precedencia sobre o operador op2.
    Retorna 0 caso contrario. */
 int precede(t_operador op1, t_operador op2) {
-    if((op1 - op2) >= 1.0)
+    if((op1 - op2) > 1)
         return 1;
     return 0;
 }
@@ -54,26 +59,29 @@ int opera(t_operador op, t_pilha *valores) {
     double val_esq, val_dir;
 
     if(!desempilha(&val_dir, valores))
-        return 0;
+    	return 0;
     if(!desempilha(&val_esq, valores))
-        return 0;
+    	return 0;
     if(op == SOM)
-        return empilha(val_esq + val_dir, valores);
+    	return empilha(val_esq + val_dir, valores);
     if(op == SUB)
-        return empilha(val_esq - val_dir, valores);
+    	return empilha(val_esq - val_dir, valores);
     if(op == MUL)
-        return empilha(val_esq * val_dir, valores);
+    	return empilha(val_esq * val_dir, valores);
     if(op == DIV && val_dir != 0.0)
-        return empilha(val_esq / val_dir, valores);
+		return empilha(val_esq / val_dir, valores);
+	if(op == EXP)
+		return empilha(pow(val_esq, val_dir), valores);
+
     return 0;
 }
 
 
 /* Imprime na saida de erro (stderr) a mensagem de erro e a linha e 
    a coluna da entrada onde o erro foi detectado. */
-void erro_aborta(char *msg, int col) {
-    fprintf(stderr, "ERRO: %s (coluna %d)\n", msg, col);
-    exit(1);
+void erro(char *msg, int col, int *flag_erro) {
+	fprintf(stderr, "ERRO: %s (coluna %d)\n", msg, col);
+	*flag_erro = 1;
 }
 
 
@@ -135,109 +143,155 @@ char* le_entrada() {
     return ent;
 }
 
-
 int main() {
     t_pilha *pilha_valores, *pilha_operadores;
     t_operador operador, op_topo;
-    double operando, resultado;
-    char *entrada, *c, *prox;
-
-    pilha_valores = cria_pilha(TAM_PILHA);
-    if(!pilha_valores)
-        erro_aborta("erro ao criar pilha de valores", 0);
-
-    pilha_operadores = cria_pilha(TAM_PILHA);
-    if(!pilha_operadores)
-        erro_aborta("erro ao criar pilha de operadores", 0);
+	double operando, resultado, memoria = 0.0;
+	char *entrada, *c, *prox;
+	int flag_erro = 0;
 
     entrada = le_entrada();
-    if(!entrada)
-        erro_aborta("erro de leitura", 0);
+    if(!entrada) {
+        erro("erro de leitura", 0, &flag_erro);
+		return 1;
+	}
 
     c = entrada;
-    while(*c != '\n') {
-        /* Percorre o ponteiro c pela entrada ate o final de linha. */
+	/* Loop principal, le valores e realiza operacoes ate ler uma linha
+	   que contém "q" na primeira posição */
+	while(*c != 'q') {
 
-        /* Caso 1: separadores */
-        if(*c == ' ' || *c == '\t')
-            /* Se for sepador, passa para o proximo caracter. */
-            c++;
+		pilha_valores = cria_pilha(TAM_PILHA);
+		if(!pilha_valores) {
+			erro("erro ao criar pilha de valores", 0, &flag_erro);
+			return 1;
+		}
 
-        /* Caso 2: operando */
-        else if(isdigit(*c)) {
-            /* Se for [1..9] le um valor e empilha na pilha de valores. */
-            operando = strtod(c, &prox);
-            if(c == prox)
-                erro_aborta("operando incorreto", c - entrada + 1);
-            if(!empilha(operando, pilha_valores))
-                erro_aborta("pilha de valores cheia", c - entrada + 1);
-            c = prox;
-        }
+		pilha_operadores = cria_pilha(TAM_PILHA);
+		if(!pilha_operadores) {
+			erro("erro ao criar pilha de operadores", 0, &flag_erro);
+			return 1;
+		}
 
-        /* Caso 3: abre parenteses */
-        else if(*c == '(') {
-            /* Se for abre parenteses, empilha PAR na pilha de operadores. */
-            if(!empilha(PAR, pilha_operadores))
-                erro_aborta("pilha de operadores cheia", c - entrada + 1);
-            c++;
-        }
+		while(*c != 'q' && *c != '\n' && !flag_erro) {
+			/* Percorre o ponteiro c pela entrada até achar um q, o final da linha ou um erro. */
 
-        /* Caso 4: fecha parenteses */
-        else if(*c == ')') {
-            /* Se for fecha parenteses, processa a pilha de operadores até 
-               encontar um PAR. */ 
-            while(topo(&op_topo, pilha_operadores) && op_topo != PAR) {
-                desempilha(&op_topo, pilha_operadores);
-                if(!opera(op_topo, pilha_valores))
-                    erro_aborta("formato incorreto", c - entrada + 1);
-            }
-            if(pilha_vazia(pilha_operadores) ||
-               (desempilha(&op_topo, pilha_operadores) && op_topo != PAR))
-                erro_aborta("formato incorreto", c - entrada + 1);
-            c++;
-        }
+			/* Caso 1: separadores */
+			if(*c == ' ' || *c == '\t')
+				/* Se for separador, passa para o proximo caracter. */
+				c++;
 
-        /* Caso 5: operador */
-        else if(converte_operador(&operador, *c)) {
-            /* Se for um operador valido, verifica a precedencia em relacao
-               ao topo da pilha de operadores. */
-            while(topo(&op_topo, pilha_operadores) &&
-                  op_topo != PAR &&
-                  precede(op_topo, operador)) {
-                /* Enquando o topo da pilha tiver precedencia, desempilha e
-                   processa o operador do topo da pilha. */
-                desempilha(&op_topo, pilha_operadores);
-                if(!opera(op_topo, pilha_valores))
-                    erro_aborta("formato incorreto", c - entrada + 1);
-            }
-            if(!empilha(operador, pilha_operadores))
-                /* Empilha o novo operador na pilha de operadores. */
-                erro_aborta("pilha de operadores cheia", c - entrada + 1);
-            c++;
-        }
+			/* Caso 2: operando */
+			else if(isdigit(*c)) {
+				/* Se for [1..9] le um valor e empilha na pilha de valores. */
+				operando = strtod(c, &prox);
+				if(c == prox)
+					erro("operando incorreto", c - entrada + 1, &flag_erro);
+				else if(!empilha(operando, pilha_valores))
+					erro("pilha de valores cheia", c - entrada + 1, &flag_erro);
+				else 
+					c = prox;
+			}
 
-        /* Caso 6: caracter invalido na entrada */
-        else
-            erro_aborta("caracter desconhecido", c - entrada + 1);
-    }
+			/* Caso 3: abre parenteses */
+			else if(*c == '(') {
+				/* Se for abre parenteses, empilha PAR na pilha de operadores. */
+				if(!empilha(PAR, pilha_operadores))
+					erro("pilha de operadores cheia", c - entrada + 1, &flag_erro);
+				else
+					c++;
+			}
 
-    /* Nesse ponto o processamento da entrada terminou e pode ser o caso da 
-       pilha de operadores nao estar vazia. */
-    while(desempilha(&op_topo, pilha_operadores)) {
-        /* Processa os operadores que restaram na pilha. */
-        if(!opera(op_topo, pilha_valores))
-            erro_aborta("formato incorreto", c - entrada + 1);
-    }
+			/* Caso 4: fecha parenteses */
+			else if(*c == ')') {
+				/* Se for fecha parenteses, processa a pilha de operadores até 
+				   encontar um PAR. */ 
+				while(topo(&op_topo, pilha_operadores) && op_topo != PAR && !flag_erro) {
+					desempilha(&op_topo, pilha_operadores);
+					if(!opera(op_topo, pilha_valores))
+						erro("formato incorreto", c - entrada + 1, &flag_erro);
+				}
+				if(pilha_vazia(pilha_operadores) ||
+				   (desempilha(&op_topo, pilha_operadores) && op_topo != PAR))
+					erro("formato incorreto", c - entrada + 1, &flag_erro);
+				else
+					c++;
+			}
 
-    /* Após o processamento, o resultado final da expressao esta no topo da 
-       pilha de valores. */
-    if(!desempilha(&resultado, pilha_valores))
-        erro_aborta("formato incorreto", c - entrada + 1);
-    printf("%.16g\n", resultado);
+			/* Caso 5: operador */
+			else if(converte_operador(&operador, *c)) {
+				/* Se for um operador valido, verifica a precedencia em relacao
+				   ao topo da pilha de operadores. */
+				while(topo(&op_topo, pilha_operadores) &&
+					  op_topo != PAR &&
+					  precede(op_topo, operador) &&
+					  !flag_erro) {
+					/* Enquando o topo da pilha tiver precedencia, desempilha e
+					   processa o operador do topo da pilha. */
+					desempilha(&op_topo, pilha_operadores);
+					if(!opera(op_topo, pilha_valores))
+						erro("formato incorreto", c - entrada + 1, &flag_erro);
+				}
+				if(!empilha(operador, pilha_operadores))
+					/* Empilha o novo operador na pilha de operadores. */
+					erro("pilha de operadores cheia", c - entrada + 1, &flag_erro);
+				else
+					c++;
+			}
 
-    destroi_pilha(pilha_valores);
-    destroi_pilha(pilha_operadores);
-    free(entrada);
+			/* Caso 6: memória */
+			else if(*c == 'm') {
+				/* Se for m, empilha o valor guardado na memória na pilha de valores */
+				if(!empilha(memoria, pilha_valores))
+					erro("pilha de valores cheia", c - entrada + 1, &flag_erro);
+				else
+					c++;
+			}
+
+			/* Caso 7: caracter invalido na entrada */
+			else
+				erro("caracter desconhecido", c - entrada + 1, &flag_erro);
+		}
+
+		/* Sai da leitura se encontrar um q em qualquer posição da entrada */
+		if(*c == 'q') break;
+
+		if(!flag_erro) {
+			/* Nesse ponto o processamento da entrada terminou (por enquanto sem erros)
+			   e pode ser o caso da pilha de operadores nao estar vazia. */
+			while(desempilha(&op_topo, pilha_operadores) && !flag_erro) {
+				/* Processa os operadores que restaram na pilha. */
+				if(!opera(op_topo, pilha_valores))
+					erro("formato incorreto", c - entrada + 1, &flag_erro);
+			}
+
+			/* Após o processamento, o resultado final da expressao esta no topo da 
+			   pilha de valores. */
+			if(!flag_erro) {
+				if(!desempilha(&resultado, pilha_valores))
+					erro("formato incorreto", c - entrada + 1, &flag_erro);
+				else {
+					memoria = resultado;
+					printf("%.16g\n", resultado);
+				}
+			}
+		}
+		/* Libera a entrada e lê uma nova entrada. */
+
+		destroi_pilha(pilha_valores);
+		destroi_pilha(pilha_operadores);
+		free(entrada);
+
+		entrada = le_entrada();
+		if(!entrada)
+			erro("erro de leitura", 0, &flag_erro);
+
+		c = entrada;
+
+		flag_erro = 0;
+	}
+
+	free(entrada);
 
     return 0;
 }
