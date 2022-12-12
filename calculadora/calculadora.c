@@ -6,24 +6,24 @@
 
 /* Definindo o valor do operador como um inteiro, prevenimos
    erros de aritmética com ponto flutuante. */
-typedef int t_operador;
+typedef double t_operador;
 
 #define TAM_ENTRADA 256
 #define TAM_PILHA 1024
 
 
 /* Constantes com valores para identificar os operadores. O valor 
-   antes da casa da unidade define a precedencia entre os operadores, 
-   valores maiores tem maior precedencia. */
-#define SOM 101
-#define SUB 102
-#define MUL 201
-#define DIV 202
-#define EXP 300
+   antes do ponto flutuante define a precedência entre os operadores, 
+   valores maiores tem maior precedência. */
+#define SOM 10.1
+#define SUB 10.2
+#define MUL 20.1
+#define DIV 20.2
+#define EXP 30.0
 
 
 /* Identificador de '(' para ser empilhado na pilha de operadores */
-#define PAR 990
+#define PAR 99.0
 
 
 /* Converte os caracteres que representam os operadores na entrada
@@ -46,7 +46,7 @@ int converte_operador(t_operador *op, char c) {
 /* Retorna 1 se o operador op1 tem precedencia sobre o operador op2.
    Retorna 0 caso contrario. */
 int precede(t_operador op1, t_operador op2) {
-    if((op1 - op2) > 1)
+    if((op1 - op2) > 1.0)
         return 1;
     return 0;
 }
