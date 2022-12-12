@@ -45,8 +45,8 @@ int converte_operador(t_operador *op, char c) {
 
 /* Retorna 1 se o operador op1 tem precedencia sobre o operador op2.
    Retorna 0 caso contrario. */
-int precede(t_operador op1, t_operador op2) {
-    if((op1 - op2) > 1.0)
+int precedencia_maior_ou_igual(t_operador op1, t_operador op2) {
+    if(floor(op1) >= floor(op2))
         return 1;
     return 0;
 }
@@ -224,7 +224,7 @@ int main() {
 				   ao topo da pilha de operadores. */
 				while(topo(&op_topo, pilha_operadores) &&
 					  op_topo != PAR &&
-					  precede(op_topo, operador) &&
+					  precedencia_maior_ou_igual(op_topo, operador) &&
 					  !flag_erro) {
 					/* Enquando o topo da pilha tiver precedencia, desempilha e
 					   processa o operador do topo da pilha. */
