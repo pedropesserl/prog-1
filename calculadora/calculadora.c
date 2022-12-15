@@ -46,9 +46,7 @@ int converte_operador(t_operador *op, char c) {
 /* Retorna 1 se o operador op1 tem precedencia sobre o operador op2.
    Retorna 0 caso contrario. */
 int precedencia_maior_ou_igual(t_operador op1, t_operador op2) {
-    if(floor(op1) >= floor(op2))
-        return 1;
-    return 0;
+    return floor(op1) >= floor(op2);
 }
 
 
@@ -173,6 +171,11 @@ int main() {
 			return 1;
 		}
 
+		if( !(isdigit(*c) || *c == '('))
+			/* Se o primeiro caracter não for nem um dígito nem um abre parênteses,
+			   o formato está errado. */
+			erro("formato incorreto", c - entrada + 1, &flag_erro);
+
 		while(*c != 'q' && *c != '\n' && !flag_erro) {
 			/* Percorre o ponteiro c pela entrada até achar um q, o final da linha ou um erro. */
 
@@ -266,9 +269,9 @@ int main() {
 			}
 
 			/* Após o processamento, o resultado final da expressao esta no topo da 
-			   pilha de valores. */
+			   pilha de valores. A pilha deve conter apenas esse valor. */
 			if(!flag_erro) {
-				if(!desempilha(&resultado, pilha_valores))
+				if(!desempilha(&resultado, pilha_valores) || !pilha_vazia(pilha_valores))
 					erro("formato incorreto", c - entrada + 1, &flag_erro);
 				else {
 					memoria = resultado;
