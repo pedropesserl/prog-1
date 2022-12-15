@@ -31,7 +31,7 @@ typedef double t_operador;
    Retorna 1 se o caracter c representa um operador valido e 0 caso
    contrario. */
 int converte_operador(t_operador *op, char c) {
-    switch(c) {
+	switch(c) {
 		case '+': *op = SOM; break;
 		case '-': *op = SUB; break;
 		case '*': *op = MUL; break;
@@ -39,14 +39,14 @@ int converte_operador(t_operador *op, char c) {
 		case '^': *op = EXP; break;
 		default : return 0;
 	}
-    return 1;
+	return 1;
 }
 
 
 /* Retorna 1 se o operador op1 tem precedencia sobre o operador op2.
    Retorna 0 caso contrario. */
 int precedencia_maior_ou_igual(t_operador op1, t_operador op2) {
-    return floor(op1) >= floor(op2);
+	return floor(op1) >= floor(op2);
 }
 
 
@@ -54,24 +54,24 @@ int precedencia_maior_ou_igual(t_operador op1, t_operador op2) {
    operador sobre esses valores e empilha o resultado na pilha de 
    valores. */
 int opera(t_operador op, t_pilha *valores) {
-    double val_esq, val_dir;
+	double val_esq, val_dir;
 
-    if(!desempilha(&val_dir, valores))
-    	return 0;
-    if(!desempilha(&val_esq, valores))
-    	return 0;
-    if(op == SOM)
-    	return empilha(val_esq + val_dir, valores);
-    if(op == SUB)
-    	return empilha(val_esq - val_dir, valores);
-    if(op == MUL)
-    	return empilha(val_esq * val_dir, valores);
-    if(op == DIV && val_dir != 0.0)
+	if(!desempilha(&val_dir, valores))
+		return 0;
+	if(!desempilha(&val_esq, valores))
+		return 0;
+	if(op == SOM)
+		return empilha(val_esq + val_dir, valores);
+	if(op == SUB)
+		return empilha(val_esq - val_dir, valores);
+	if(op == MUL)
+		return empilha(val_esq * val_dir, valores);
+	if(op == DIV && val_dir != 0.0)
 		return empilha(val_esq / val_dir, valores);
 	if(op == EXP)
 		return empilha(pow(val_esq, val_dir), valores);
 
-    return 0;
+	return 0;
 }
 
 
@@ -90,32 +90,32 @@ void erro(char *msg, int col, int *flag_erro) {
    ne leitura ou ne alocação de memoria. */
 /*
 char* le_entrada() {
-    char *ent, *ret_realloc, *ret_fgets;
-    int tam, pos;
+	char *ent, *ret_realloc, *ret_fgets;
+	int tam, pos;
 
-    ent = NULL;
-    tam = 0;
-    pos = 0;
-    
-    do {
-        tam += TAM_ENTRADA;
-        ret_realloc = (char*) realloc(ent, sizeof(char) * tam);
-        if(!ret_realloc) {
-            free(ent);
-            return NULL;
-        }
-        ent = ret_realloc;
-        ent[tam - 1] = ' ';
-        ret_fgets = fgets(ent + pos, tam - pos, stdin);
-        pos = tam - 1;    
-    } while(ret_fgets && ent[tam - 1] == '\0' && ent[tam - 2] != '\n');
-    
-    if(!ret_fgets && tam == TAM_ENTRADA) {
-        free(ent);
-        return NULL;
-    }
-    
-    return ent;
+	ent = NULL;
+	tam = 0;
+	pos = 0;
+	
+	do {
+		tam += TAM_ENTRADA;
+		ret_realloc = (char*) realloc(ent, sizeof(char) * tam);
+		if(!ret_realloc) {
+			free(ent);
+			return NULL;
+		}
+		ent = ret_realloc;
+		ent[tam - 1] = ' ';
+		ret_fgets = fgets(ent + pos, tam - pos, stdin);
+		pos = tam - 1;	
+	} while(ret_fgets && ent[tam - 1] == '\0' && ent[tam - 2] != '\n');
+	
+	if(!ret_fgets && tam == TAM_ENTRADA) {
+		free(ent);
+		return NULL;
+	}
+	
+	return ent;
 }
 */
 
@@ -125,36 +125,36 @@ char* le_entrada() {
    ne leitura ou na alocação de memoria. Se o tamanho da entrada for 
    maior que o vetor de leitura, retorna NULL. */
 char* le_entrada() {
-    char *ent, *ret_fgets;
-    int tam;
-    
-    tam = TAM_ENTRADA;
-    ent = (char*) malloc(sizeof(char) * tam);
-    if(!ent)
-        return NULL;
-    ent[tam - 1] = ' ';
-    ret_fgets = fgets(ent, tam, stdin);
-    if(!ret_fgets || (ent[tam - 1] == '\0' && ent[tam - 2] != '\n')) {
-        free(ent);
-        return NULL;
-    }
-    return ent;
+	char *ent, *ret_fgets;
+	int tam;
+	
+	tam = TAM_ENTRADA;
+	ent = (char*) malloc(sizeof(char) * tam);
+	if(!ent)
+		return NULL;
+	ent[tam - 1] = ' ';
+	ret_fgets = fgets(ent, tam, stdin);
+	if(!ret_fgets || (ent[tam - 1] == '\0' && ent[tam - 2] != '\n')) {
+		free(ent);
+		return NULL;
+	}
+	return ent;
 }
 
 int main() {
-    t_pilha *pilha_valores, *pilha_operadores;
-    t_operador operador, op_topo;
+	t_pilha *pilha_valores, *pilha_operadores;
+	t_operador operador, op_topo;
 	double operando, resultado, memoria = 0.0;
 	char *entrada, *c, *prox;
 	int flag_erro = 0;
 
-    entrada = le_entrada();
-    if(!entrada) {
-        erro("erro de leitura", 0, &flag_erro);
+	entrada = le_entrada();
+	if(!entrada) {
+		erro("erro de leitura", 0, &flag_erro);
 		return 1;
 	}
 
-    c = entrada;
+	c = entrada;
 	/* Loop principal, le valores e realiza operacoes ate ler uma linha
 	   que contém "q" na primeira posição */
 	while(*c != 'q') {
@@ -296,5 +296,5 @@ int main() {
 
 	free(entrada);
 
-    return 0;
+	return 0;
 }
