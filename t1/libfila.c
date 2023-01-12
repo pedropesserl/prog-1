@@ -14,8 +14,9 @@ fila_t *cria_fila() {
 }
 
 fila_t *destroi_fila(fila_t *f) {
-	int i, e = 0, tamanho = tamanho_fila(f);
-	for (i = 0; i < tamanho; i++) {
+	int e = 0;
+
+	while (f->ini != NULL) {
 		retira_fila(f, &e);
 	}
 
