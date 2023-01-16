@@ -11,8 +11,8 @@ CC = gcc
 mundo: mundo.o libconjunto.o liblef.o libfila.o
 	$(CC) -o mundo mundo.o libconjunto.o liblef.o libfila.o $(LDFLAGS)
 
-teste: teste.o liblef.o
-	$(CC) -o teste teste.o liblef.o $(LDFLAGS)
+teste: teste.o liblef.o libconjunto.o libfila.o
+	$(CC) -o teste teste.o liblef.o libconjunto.o libfila.o $(LDFLAGS)
 
 libconjunto.o: libconjunto.c
 	$(CC) -c $(CFLAGS) libconjunto.c

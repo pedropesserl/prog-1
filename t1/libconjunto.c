@@ -183,8 +183,10 @@ conjunto_t *cria_subcjt_cjt(conjunto_t *c, int n) {
 		return NULL;
 
 	conjunto_t *disponiveis;
-	if ( !(disponiveis = copia_cjt(c)) )
+	if ( !(disponiveis = copia_cjt(c)) ) {
+		free(sub);
 		return NULL;
+	}
 
 	int i;
 	int aleat;
