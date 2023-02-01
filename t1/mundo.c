@@ -6,10 +6,10 @@
 #include "libfila.h"
 #include "liblef.h"
 
-#define MEM_ERROR_EXIT						    		  \
-	do {											      \
-		printf("Erro: não foi possível alocar memória."); \
-		exit(1);										  \
+#define MEM_ERROR_EXIT										\
+	do {													\
+		printf("Erro: não foi possível alocar memória.");	\
+		exit(1);											\
 	} while(0)
 
 #define CHEGADA 0
@@ -57,6 +57,10 @@ double distancia(local_t loc1, local_t loc2) {
 	int deltay = loc2.posy - loc1.posy;
 	int quadrado_da_distancia = deltax * deltax + deltay * deltay;
 	return sqrt((double)quadrado_da_distancia);
+}
+
+int max(int a, int b) {
+	return a > b ? a : b; 
 }
 
 int vazia_lef(lef_t *l) {
@@ -143,42 +147,34 @@ mundo_t *cria_mundo(lef_t *lista_de_eventos) {
 	/* para cada herói, cria evento de chegada e insere na lef */
 	/* evento_t *evento_chegada_heroi; */
 	for (i = 0; i < m->n_herois; i++) {
-		evento_t evento_chegada_heroi = {
-			aleat(0, 96*7),
-			CHEGADA,
-			m->herois[i].id,
-			aleat(0, m->n_locais-1)
-		};
-		if ( !(adiciona_ordem_lef(lista_de_eventos, &evento_chegada_heroi)) )
-			MEM_ERROR_EXIT;
+		evento_t evento_chegada_heroi = { aleat(0, 96*7), CHEGADA, m->herois[i].id, aleat(0, m->n_locais-1) };
+		adiciona_ordem_lef(lista_de_eventos, &evento_chegada_heroi);
 	}
 
 	/* para cada missao, cria evento e insere na lef */
 	for (i = 0; i < m->n_missoes; i++) {
-		evento_t evento_missao = {
-			aleat(0, m->fim_do_mundo),
-			MISSAO,
-			i,
-			0
-		};
-		if ( !(adiciona_ordem_lef(lista_de_eventos, &evento_missao)) )
-			MEM_ERROR_EXIT;
+		evento_t evento_missao = { aleat(0, m->fim_do_mundo), MISSAO, i, 0 };
+		adiciona_ordem_lef(lista_de_eventos, &evento_missao);
 	}
 
 	/* cria evento de fim e insere na lef */
-	evento_t fim = {
-		m->fim_do_mundo,
-		FIM,
-		0,
-		0,
-	};
-	if ( !(adiciona_ordem_lef(lista_de_eventos, &fim)) )
-		MEM_ERROR_EXIT;
+	evento_t fim = { m->fim_do_mundo, FIM, 0, 0 };
+	adiciona_ordem_lef(lista_de_eventos, &fim);
 
 	return m;
 }
 
-/* lef_t *inicializa_lista_de_eventos() */
+int local_lotado(int id_local, mundo_t *m) {
+	return cardinalidade_cjt(m->locais[id_local].publico) >= m->locais[id_local].lotacao_max;
+}
+
+int heroi_tem_paciencia(int id_heroi, int id_local, mundo_t *m) {
+	return m->herois[id_heroi].paciencia/4 > tamanho_fila(m->locais[id_local].fila);
+}
+
+int velocidade_heroi(heroi_t heroi) {
+	return 100 - max(0, heroi.idade - 40);
+}
 
 int main() {
 	srand(time(0));
@@ -194,51 +190,89 @@ int main() {
 	printf("conjunto de habilidades do mundo:\n");
 	imprime_cjt(mundo->cj_habilidades);
 	
-	int i = 0;
-	nodo_lef_t *exemplo = lista_de_eventos->Primeiro;
-	printf("eventos alocados na lef:\n");
-	while (exemplo) {
-		printf("tempo do evento %d: %d\n", i, exemplo->evento->tempo);
-		printf(" tipo do evento %d: ", i);
-		switch (exemplo->evento->tipo) {
-			case CHEGADA:
-				printf("CHEGADA\n");
-				break;
-			case SAIDA:
-				printf("SAIDA\n");
-				break;
-			case MISSAO:
-				printf("MISSAO\n");
-				break;
-			case FIM:
-				printf("FIM\n");
-				break;
-			default:
-				printf("deu alguma coisa muito louca aqui\n");
-				break;
-		}
-		i++;
-		exemplo = exemplo->prox;
-	}
+	/* int i = 0; */
+	/* nodo_lef_t *exemplo = lista_de_eventos->Primeiro; */
+	/* printf("eventos alocados na lef:\n"); */
+	/* while (exemplo) { */
+	/* 	printf("tempo do evento %d: %d\n", i, exemplo->evento->tempo); */
+	/* 	printf(" tipo do evento %d: ", i); */
+	/* 	switch (exemplo->evento->tipo) { */
+	/* 		case CHEGADA: */
+	/* 			printf("CHEGADA\n"); */
+	/* 			break; */
+	/* 		case SAIDA: */
+	/* 			printf("SAIDA\n"); */
+	/* 			break; */
+	/* 		case MISSAO: */
+	/* 			printf("MISSAO\n"); */
+	/* 			break; */
+	/* 		case FIM: */
+	/* 			printf("FIM\n"); */
+	/* 			break; */
+	/* 		default: */
+	/* 			printf("deu alguma coisa muito louca aqui\n"); */
+	/* 			break; */
+	/* 	} */
+	/* 	i++; */
+	/* 	exemplo = exemplo->prox; */
+	/* } */
 
-	/* ciclo */
-	/* retira o primeiro evento da lista_de_eventos; */
+	/* ciclo da simulação */
 	evento_t *evento_atual;
 	evento_atual = obtem_primeiro_lef(lista_de_eventos);
-	/* atualiza o estado do sistema; */
+	mundo->tempo_atual = evento_atual->tempo;
+	/* trata o evento e atualiza estado do sistema */
+
+	/* TODO: criar função wrapper para tratar os eventos e poder criar variaveis temporarias */
+
 	switch (evento_atual->tipo) {
 		case CHEGADA:
+			evento_t saida;
+			int id_heroi = evento_atual->dado1;
+			int id_local = evento_atual->dado2;
+			if (local_lotado(id_local, mundo)) {
+				if (heroi_tem_paciencia(id_heroi, id_local, mundo)) {
+					insere_fila(mundo->locais[id_local].fila, id_heroi);
+				} else {
+					saida = { mundo->tempo_atual, SAIDA, id_heroi, id_local };
+					adiciona_ordem_lef(lista_de_eventos, &saida);
+				}
+			} else {
+				insere_cjt(mundo->locais[id_local].publico, id_heroi);
+				int t_permanencia_local = max(1, mundo->herois[id_heroi].paciencia/10 + aleat(-2,6));
+				saida = { mundo->tempo_atual + t_permanencia_local, SAIDA, id_heroi, id_local };
+				adiciona_ordem_lef(lista_de_eventos, &saida);
+			}
 			break;
+
 		case SAIDA:
+			evento_t chegada_heroi, chegada_heroi_fila;
+			int id_heroi = evento_atual->dado1;
+			int id_local = evento_atual->dado2;
+			if (pertence_cjt(mundo->locais[id_local].publico, id_heroi)) {
+				retira_cjt (mundo->locais[id_local].publico, id_heroi);
+				if (!vazia_fila(mundo->locais[id_local].fila)) {
+					int id_heroi_fila;
+					retira_fila(mundo->locais[id_local].fila, &id_heroi_fila);
+					chegada_heroi_fila = { mundo->tempo_atual, CHEGADA, id_heroi_fila, id_local };
+					adiciona_inicio_lef(lista_de_eventos, &chegada_heroi_fila);
+				}
+			}
+			int id_local_destino = aleat(0, mundo->n_locais-1);
+			int t_deslocamento = distancia(mundo->locais[id_local], mundo->locais[id_local_destino]) / velocidade_heroi(mundo->herois[id_heroi]);
+			chegada_heroi = { mundo->tempo_atual + t_deslocamento/15, CHEGADA, id_heroi, id_local_destino };
+			adiciona_ordem_lef(lista_de_eventos, &chegada_heroi);
 			break;
+
 		case MISSAO:
 			break;
 		case FIM:
+
+			lista_de_eventos = destroi_lef(lista_de_eventos);
 			break;
 	}
 	/* agenda os novos eventos na lista_de_eventos; */
 
-	lista_de_eventos = destroi_lef(lista_de_eventos);
 
 	return 0;
 }
