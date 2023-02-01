@@ -95,18 +95,18 @@ local_t inicializa_local(int id, int tamanho_mundo) {
 	return l;
 }
 
-evento_t *cria_evento(int tempo, int tipo, int dado1, int dado2) {
-	evento_t *e;
-	if ( !(e = malloc(sizeof(evento_t))) )
-		MEM_ERROR_EXIT;
+/* evento_t *cria_evento(int tempo, int tipo, int dado1, int dado2) { */
+/* 	evento_t *e; */
+/* 	if ( !(e = malloc(sizeof(evento_t))) ) */
+/* 		MEM_ERROR_EXIT; */
 
-	e->tempo = tempo;
-	e->tipo = tipo;
-	e->dado1 = dado1;
-	e->dado2 = dado2;
+/* 	e->tempo = tempo; */
+/* 	e->tipo = tipo; */
+/* 	e->dado1 = dado1; */
+/* 	e->dado2 = dado2; */
 
-	return e;
-}
+/* 	return e; */
+/* } */
 
 mundo_t *cria_mundo(lef_t *lista_de_eventos) {
 	mundo_t *m;
@@ -143,8 +143,6 @@ mundo_t *cria_mundo(lef_t *lista_de_eventos) {
 	/* para cada herói, cria evento de chegada e insere na lef */
 	/* evento_t *evento_chegada_heroi; */
 	for (i = 0; i < m->n_herois; i++) {
-		/* evento_chegada_heroi = cria_evento(aleat(0, 96*7), CHEGADA, m->herois[i].id, aleat(0, n_locais-1)); */
-		/* TODO: testar se funciona alocar o evento estaticamente desse jeito */
 		evento_t evento_chegada_heroi = {
 			aleat(0, 96*7),
 			CHEGADA,
@@ -157,8 +155,6 @@ mundo_t *cria_mundo(lef_t *lista_de_eventos) {
 
 	/* para cada missao, cria evento e insere na lef */
 	for (i = 0; i < m->n_missoes; i++) {
-		/* evento_chegada_heroi = cria_evento(aleat(0, 96*7), CHEGADA, m->herois[i].id, aleat(0, n_locais-1)); */
-		/* TODO: testar se funciona alocar o evento estaticamente desse jeito */
 		evento_t evento_missao = {
 			aleat(0, m->fim_do_mundo),
 			MISSAO,
@@ -168,10 +164,8 @@ mundo_t *cria_mundo(lef_t *lista_de_eventos) {
 		if ( !(adiciona_ordem_lef(lista_de_eventos, &evento_missao)) )
 			MEM_ERROR_EXIT;
 	}
-	
 
 	/* cria evento de fim e insere na lef */
-		/* TODO: testar se funciona alocar o evento estaticamente desse jeito */
 	evento_t fim = {
 		m->fim_do_mundo,
 		FIM,
