@@ -63,7 +63,7 @@ int adiciona_ordem_lef(lef_t *l, evento_t *evento) {
 	novo_nodo->prox = l->Primeiro;
 	novo_nodo->evento = novo_evento;
 
-	if (novo_nodo->prox == NULL) {
+	if (l->Primeiro == NULL || l->Primeiro->evento->tempo > novo_nodo->evento->tempo) {
 		l->Primeiro = novo_nodo;
 		return 1;
 	}

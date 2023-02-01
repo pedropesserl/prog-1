@@ -205,24 +205,6 @@ int main() {
 	printf("eventos alocados na lef:\n");
 	while (exemplo) {
 		printf("tempo do evento %d: %d\n", i, exemplo->evento->tempo);
-		printf(" tipo do evento %d: ", i);
-		switch (exemplo->evento->tipo) {
-			case CHEGADA:
-				printf("CHEGADA\n");
-				break;
-			case SAIDA:
-				printf("SAIDA\n");
-				break;
-			case MISSAO:
-				printf("MISSAO\n");
-				break;
-			case FIM:
-				printf("FIM\n");
-				break;
-			default:
-				printf("deu alguma coisa muito louca aqui\n");
-				break;
-		}
 		i++;
 		exemplo = exemplo->prox;
 	}
