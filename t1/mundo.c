@@ -44,7 +44,6 @@ typedef struct {
 	int n_locais;
 	heroi_t *herois;
 	local_t *locais;
-	conjunto_t **missoes;
 } mundo_t;
 
 /* retorna um inteiro aleatório entre a e b (inclusive) */
@@ -100,19 +99,6 @@ local_t inicializa_local(int id, int tamanho_mundo) {
 	return l;
 }
 
-/* evento_t *cria_evento(int tempo, int tipo, int dado1, int dado2) { */
-/* 	evento_t *e; */
-/* 	if ( !(e = malloc(sizeof(evento_t))) ) */
-/* 		MEM_ERROR_EXIT; */
-
-/* 	e->tempo = tempo; */
-/* 	e->tipo = tipo; */
-/* 	e->dado1 = dado1; */
-/* 	e->dado2 = dado2; */
-
-/* 	return e; */
-/* } */
-
 mundo_t *cria_mundo(lef_t *lista_de_eventos) {
 	mundo_t *m;
 	if ( !(m = malloc(sizeof(mundo_t))) )
@@ -152,14 +138,8 @@ mundo_t *cria_mundo(lef_t *lista_de_eventos) {
 		adiciona_ordem_lef(lista_de_eventos, &evento_chegada_heroi);
 	}
 
-	/* cria vetor de missões */
-	if ( !(m->missoes = malloc(m->n_missoes * sizeof(conjunto_t*))) ) {
-		MEM_ERROR_EXIT;
-	}
-	/* preenche vetor de missões, inicialmente com NULL;
-	 * para cada missao, cria evento e insere na lef */
+	/* para cada missao, cria evento e insere na lef */
 	for (i = 0; i < m->n_missoes; i++) {
-		m->missoes[i] = NULL;
 		evento_t evento_missao = { aleat(0, m->fim_do_mundo), MISSAO, i, 0 };
 		adiciona_ordem_lef(lista_de_eventos, &evento_missao);
 	}
@@ -282,11 +262,8 @@ void trata_evento_saida(int id_heroi, int id_local, mundo_t *m, lef_t *lista_de_
 
 void trata_evento_missao(int id_missao, mundo_t *m, lef_t *lista_de_eventos) {
 	conjunto_t *missao;
-	if (m->missoes[id_missao] == NULL)
-		if ( !(m->missoes[id_missao] = cria_subcjt_cjt(m->cj_habilidades, aleat(3, 6))) )
-			MEM_ERROR_EXIT;
-
-	missao = m->missoes[id_missao];
+	if ( !(missao = cria_subcjt_cjt(m->cj_habilidades, aleat(3, 6))) )
+		MEM_ERROR_EXIT;
 
 	printf("%6d:MISSAO %4d HAB_REQ ", m->tempo_atual, id_missao);
 	imprime_cjt(missao);
@@ -310,9 +287,8 @@ void trata_evento_missao(int id_missao, mundo_t *m, lef_t *lista_de_eventos) {
 			incrementa_iterador_cjt(local_encontrado.publico, &id_heroi_encontrado);
 			(m->herois[id_heroi_encontrado].exp)++;
 		}
-		missao = destroi_cjt(missao);
-		m->missoes[id_missao] = NULL;
 	}
+	missao = destroi_cjt(missao);
 	equipe_escolhida = destroi_cjt(equipe_escolhida);
 }
 
@@ -331,10 +307,6 @@ void trata_evento_fim(mundo_t *m, lef_t **lista_de_eventos) {
 
 	free(m->herois);
 	free(m->locais);
-	for (i = 0; i < m->n_missoes; i++)
-		if (m->missoes[i] != NULL)
-			m->missoes[i] = destroi_cjt(m->missoes[i]);
-	free(m->missoes);
 	m->cj_habilidades = destroi_cjt(m->cj_habilidades);
 	free(m);
 	*lista_de_eventos = destroi_lef(*lista_de_eventos);
