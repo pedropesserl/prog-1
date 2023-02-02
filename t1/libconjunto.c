@@ -207,9 +207,10 @@ void imprime_cjt(conjunto_t *c) {
 	}
 
 	int i;
-	for (i = 0; i < cardinalidade_cjt(c)-1; i++)
-		printf("%d ", c->v[i]);
-	printf("%d\n", c->v[cardinalidade_cjt(c)-1]);
+	printf("%d", c->v[0]);
+	for (i = 1; i < cardinalidade_cjt(c); i++)
+		printf(" %d", c->v[i]);
+	printf("\n");
 }
 
 void inicia_iterador_cjt(conjunto_t *c) {
