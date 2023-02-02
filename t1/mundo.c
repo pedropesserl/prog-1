@@ -188,7 +188,7 @@ conjunto_t *escolhe_menor_equipe(conjunto_t *missao, int id_missao, mundo_t *m, 
 			uniao_old = destroi_cjt(uniao_old);
 		}
 
-		printf("%6d:MISSAO %4d HAB_EQL %d:", m->tempo_atual, id_missao, m->locais[i].id);
+		printf("%6d:MISSAO %3d HAB_EQL %d:", m->tempo_atual, id_missao, m->locais[i].id);
 		imprime_cjt(uniao);
 
 		/* compara se o conjunto construído contém a missao e é menor que o achado anteriormente */
@@ -265,13 +265,13 @@ void trata_evento_missao(int id_missao, mundo_t *m, lef_t *lista_de_eventos) {
 	if ( !(missao = cria_subcjt_cjt(m->cj_habilidades, aleat(3, 6))) )
 		MEM_ERROR_EXIT;
 
-	printf("%6d:MISSAO %4d HAB_REQ ", m->tempo_atual, id_missao);
+	printf("%6d:MISSAO %3d HAB_REQ ", m->tempo_atual, id_missao);
 	imprime_cjt(missao);
 
 	local_t local_encontrado;
 	conjunto_t *equipe_escolhida = escolhe_menor_equipe(missao, id_missao, m, &local_encontrado);
 
-	printf("%6d:MISSAO %4d ", m->tempo_atual, id_missao);
+	printf("%6d:MISSAO %3d ", m->tempo_atual, id_missao);
 	if (vazio_cjt(equipe_escolhida)) {
 		printf("IMPOSSIVEL\n");
 		evento_t nova_tentativa = { aleat(m->tempo_atual, m->fim_do_mundo), MISSAO, id_missao, 0 };
