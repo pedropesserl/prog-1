@@ -240,6 +240,7 @@ void trata_evento_chegada(int id_heroi, int id_local, mundo_t *m, lef_t *lista_d
 			printf("FILA %d\n", tamanho_fila(m->locais[id_local].fila));
 			return;
 		}
+
 		printf("DESISTE\n");
 		evento_t saida = { m->tempo_atual, SAIDA, id_heroi, id_local };
 		adiciona_ordem_lef(lista_de_eventos, &saida);
@@ -251,12 +252,96 @@ void trata_evento_chegada(int id_heroi, int id_local, mundo_t *m, lef_t *lista_d
 	int t_permanencia_local = max(1, m->herois[id_heroi].paciencia/10 + aleat(-2,6));
 	evento_t saida = { m->tempo_atual + t_permanencia_local, SAIDA, id_heroi, id_local };
 	adiciona_ordem_lef(lista_de_eventos, &saida);
-	return;
+}
+
+void trata_evento_saida(int id_heroi, int id_local, mundo_t *m, lef_t *lista_de_eventos) {
+	printf("%6d:SAIDA HEROI %2d Local %d (%2d/%2d)",
+			m->tempo_atual,
+			id_heroi,
+			id_local,
+			cardinalidade_cjt(m->locais[id_local].publico),
+			m->locais[id_local].lotacao_max);
+
+	if (pertence_cjt(m->locais[id_local].publico, id_heroi)) {
+		retira_cjt(m->locais[id_local].publico, id_heroi);
+		if (!vazia_fila(m->locais[id_local].fila)) {
+			int id_heroi_fila;
+			retira_fila(m->locais[id_local].fila, &id_heroi_fila);
+			printf(", REMOVE FILA HEROI %d", id_heroi_fila);
+			evento_t chegada_heroi_fila = { m->tempo_atual, CHEGADA, id_heroi_fila, id_local };
+			adiciona_inicio_lef(lista_de_eventos, &chegada_heroi_fila);
+		}
+	}
+	printf("\n");
+
+	int id_local_destino = aleat(0, m->n_locais-1);
+	int t_deslocamento = distancia(m->locais[id_local], m->locais[id_local_destino]) / velocidade_heroi(m->herois[id_heroi]);
+	evento_t chegada_heroi = { m->tempo_atual + t_deslocamento/15, CHEGADA, id_heroi, id_local_destino };
+	adiciona_ordem_lef(lista_de_eventos, &chegada_heroi);
+}
+
+void trata_evento_missao(int id_missao, mundo_t *m, lef_t *lista_de_eventos) {
+	conjunto_t *missao;
+	if (m->missoes[id_missao] == NULL)
+		if ( !(m->missoes[id_missao] = cria_subcjt_cjt(m->cj_habilidades, aleat(3, 6))) )
+			MEM_ERROR_EXIT;
+
+	missao = m->missoes[id_missao];
+
+	printf("%6d:MISSAO %4d HAB_REQ ", m->tempo_atual, id_missao);
+	imprime_cjt(missao);
+
+	local_t local_encontrado;
+	conjunto_t *equipe_escolhida = escolhe_menor_equipe(missao, id_missao, m, &local_encontrado);
+
+	printf("%6d:MISSAO %4d ", m->tempo_atual, id_missao);
+	if (vazio_cjt(equipe_escolhida)) {
+		printf("IMPOSSIVEL\n");
+		evento_t nova_tentativa = { aleat(m->tempo_atual, m->fim_do_mundo), MISSAO, id_missao, 0 };
+		adiciona_ordem_lef(lista_de_eventos, &nova_tentativa);
+	} else {
+		printf("HER_EQS %d:", local_encontrado.id);
+		imprime_cjt(local_encontrado.publico);
+
+		int id_heroi_encontrado;
+		inicia_iterador_cjt(local_encontrado.publico);
+		int i;
+		for (i = 0; i < cardinalidade_cjt(local_encontrado.publico); i++) {
+			incrementa_iterador_cjt(local_encontrado.publico, &id_heroi_encontrado);
+			(m->herois[id_heroi_encontrado].exp)++;
+		}
+		missao = destroi_cjt(missao);
+		m->missoes[id_missao] = NULL;
+	}
+	equipe_escolhida = destroi_cjt(equipe_escolhida);
+}
+
+void trata_evento_fim(mundo_t *m, lef_t **lista_de_eventos) {
+	printf("%6d:FIM\n", m->tempo_atual);
+	int i;
+	for (i = 0; i < m->n_herois; i++) {
+		printf("HEROI %2d EXPERIENCIA %2d\n", m->herois[i].id, m->herois[i].exp);
+		m->herois[i].habilidades_do_heroi = destroi_cjt(m->herois[i].habilidades_do_heroi);
+	}
+
+	for (i = 0; i < m->n_locais; i++) {
+		m->locais[i].publico = destroi_cjt(m->locais[i].publico);
+		m->locais[i].fila = destroi_fila(m->locais[i].fila);
+	}
+
+	free(m->herois);
+	free(m->locais);
+	for (i = 0; i < m->n_missoes; i++)
+		if (m->missoes[i] != NULL)
+			m->missoes[i] = destroi_cjt(m->missoes[i]);
+	free(m->missoes);
+	m->cj_habilidades = destroi_cjt(m->cj_habilidades);
+	free(m);
+	*lista_de_eventos = destroi_lef(*lista_de_eventos);
 }
 
 int main() {
-	/* srand(time(0)); */
-	srand(0);
+	srand(time(0));
 
 	lef_t *lista_de_eventos;
 	if ( !(lista_de_eventos = cria_lef()) )
@@ -270,96 +355,21 @@ int main() {
 		mundo->tempo_atual = evento_atual->tempo;
 
 		/* trata o evento e atualiza estado do sistema */
-		int id_heroi, id_local, id_missao, i;
 		switch (evento_atual->tipo) {
 			case CHEGADA:
 				trata_evento_chegada(evento_atual->dado1, evento_atual->dado2, mundo, lista_de_eventos);
 				break;
 
-			case SAIDA: ;
-				id_heroi = evento_atual->dado1;
-				id_local = evento_atual->dado2;
-				printf("%6d:SAIDA HEROI %2d Local %d (%2d/%2d)",
-					mundo->tempo_atual,
-					id_heroi,
-					id_local,
-					cardinalidade_cjt(mundo->locais[id_local].publico),
-					mundo->locais[id_local].lotacao_max);
-
-				if (pertence_cjt(mundo->locais[id_local].publico, id_heroi)) {
-					retira_cjt(mundo->locais[id_local].publico, id_heroi);
-					if (!vazia_fila(mundo->locais[id_local].fila)) {
-						int id_heroi_fila;
-						retira_fila(mundo->locais[id_local].fila, &id_heroi_fila);
-						printf(", REMOVE FILA HEROI %d", id_heroi_fila);
-						evento_t chegada_heroi_fila = { mundo->tempo_atual, CHEGADA, id_heroi_fila, id_local };
-						adiciona_inicio_lef(lista_de_eventos, &chegada_heroi_fila);
-					}
-				}
-				printf("\n");
-
-				int id_local_destino = aleat(0, mundo->n_locais-1);
-				int t_deslocamento = distancia(mundo->locais[id_local], mundo->locais[id_local_destino]) / velocidade_heroi(mundo->herois[id_heroi]);
-				evento_t chegada_heroi = { mundo->tempo_atual + t_deslocamento/15, CHEGADA, id_heroi, id_local_destino };
-				adiciona_ordem_lef(lista_de_eventos, &chegada_heroi);
+			case SAIDA:
+				trata_evento_saida(evento_atual->dado1, evento_atual->dado2, mundo, lista_de_eventos);
 				break;
 
-			case MISSAO: ;
-				id_missao = evento_atual->dado1;
-				local_t local_encontrado;
-				conjunto_t *missao;
-				if (mundo->missoes[id_missao] == NULL)
-					if ( !(mundo->missoes[id_missao] = cria_subcjt_cjt(mundo->cj_habilidades, aleat(3, 6))) )
-						MEM_ERROR_EXIT;
-				
-				missao = mundo->missoes[id_missao];
-				printf("%6d:MISSAO %4d HAB_REQ ", mundo->tempo_atual, id_missao);
-				imprime_cjt(missao);
-				
-				conjunto_t *equipe_escolhida = escolhe_menor_equipe(missao, id_missao, mundo, &local_encontrado);
-
-				printf("%6d:MISSAO %4d ", mundo->tempo_atual, id_missao);
-				if (vazio_cjt(equipe_escolhida)) {
-					printf("IMPOSSIVEL\n");
-					evento_t nova_tentativa = { aleat(mundo->tempo_atual, mundo->fim_do_mundo), MISSAO, id_missao, 0 };
-					adiciona_ordem_lef(lista_de_eventos, &nova_tentativa);
-				} else {
-					printf("HER_EQS %d:", local_encontrado.id);
-					imprime_cjt(local_encontrado.publico);
-
-					int id_heroi_encontrado;
-					inicia_iterador_cjt(local_encontrado.publico);
-					for (i = 0; i < cardinalidade_cjt(local_encontrado.publico); i++) {
-						incrementa_iterador_cjt(local_encontrado.publico, &id_heroi_encontrado);
-						(mundo->herois[id_heroi_encontrado].exp)++;
-					}
-					missao = destroi_cjt(missao);
-					mundo->missoes[id_missao] = NULL;
-				}
-				equipe_escolhida = destroi_cjt(equipe_escolhida);
+			case MISSAO:
+				trata_evento_missao(evento_atual->dado1, mundo, lista_de_eventos);
 				break;
 
 			case FIM:
-				printf("%6d:FIM\n", mundo->tempo_atual);
-				for (i = 0; i < mundo->n_herois; i++) {
-					printf("HEROI %2d EXPERIENCIA %2d\n", mundo->herois[i].id, mundo->herois[i].exp);
-					mundo->herois[i].habilidades_do_heroi = destroi_cjt(mundo->herois[i].habilidades_do_heroi);
-				}
-
-				for (i = 0; i < mundo->n_locais; i++) {
-					mundo->locais[i].publico = destroi_cjt(mundo->locais[i].publico);
-					mundo->locais[i].fila = destroi_fila(mundo->locais[i].fila);
-				}
-				
-				free(mundo->herois);
-				free(mundo->locais);
-				for (i = 0; i < mundo->n_missoes; i++)
-					if (mundo->missoes[i] != NULL)
-						mundo->missoes[i] = destroi_cjt(mundo->missoes[i]);
-				free(mundo->missoes);
-				mundo->cj_habilidades = destroi_cjt(mundo->cj_habilidades);
-				free(mundo);
-				lista_de_eventos = destroi_lef(lista_de_eventos);
+				trata_evento_fim(mundo, &lista_de_eventos);
 				break;
 		}
 
