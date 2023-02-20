@@ -16,6 +16,8 @@ if [ ! -d $FONTE ]; then
 	exit 1
 fi
 
+FONTE=$(realpath $FONTE)
+
 if [ ! -d $DESTINO ]; then
 	mkdir $DESTINO
 fi
