@@ -23,9 +23,7 @@ DSIN=$(realpath $DSIN)
 
 cd $DSIN
 for FATOR in *; do
-
-	CONT=$(grep -iwF -f $FATOR $DCSV/* | wc -l)
-
+	CONT=$(grep -iwF -f $FATOR $DCSV/*.csv | wc -l)
 	echo "${FATOR%.*}:$CONT"
 done
 cd - > /dev/null

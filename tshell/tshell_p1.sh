@@ -25,7 +25,7 @@ fi
 DESTINO=$(realpath $DESTINO)
 
 cd $FONTE
-for ARQ in *; do
+for ARQ in *.csv; do
 	awk '(NR>1)' $ARQ | grep -iF "$T1" | grep -iF "$T2" | grep -iF "$T3" > $DESTINO/$ARQ
 done
 cd - > /dev/null
