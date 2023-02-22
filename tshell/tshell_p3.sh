@@ -35,4 +35,7 @@ CSV=$2
 confere_arq_saida $CSV
 CSV=$(realpath $CSV)
 
+# separar os campos necessários do arquivo xml.gz
+# zcat $XML | xgrep -tx "//PMID|//ArticleTitle|//Abstract|//MeshHeadingList"
+
 
