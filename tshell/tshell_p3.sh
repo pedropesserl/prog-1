@@ -35,7 +35,24 @@ CSV=$2
 confere_arq_saida $CSV
 CSV=$(realpath $CSV)
 
-# separar os campos necessários do arquivo xml.gz
-# zcat $XML | xgrep -tx "//PMID|//ArticleTitle|//Abstract|//MeshHeadingList"
-
-
+# separar os campos úteis do arquivo xml.gz
+zcat $XML | \
+	xgrep -tx "//PMID|//ArticleTitle|//Abstract|//MeshHeadingList" | \
+	# o sed acha um campo PMID, seguido de um campo ArticleTitle, seguido
+	# de um campo Abstract, e imprime. Se houver um campo MeshHeadingList
+	# após o Abstract, imprime também.
+	sed -En '
+	/<PMID/{
+		N;
+		/<ArticleTitle>/{
+			N;
+			/<Abstract>/{
+				p;
+				n;
+				/<MeshHeadingList>/{
+					p;
+				}
+			}
+		}
+	}' >> $CSV
+# grep 'PMID' ARQUIVO_COM_CAMPOS_SEPARADOS | awk '{ print substr($0, 16, length($0)-22) }' | sed 's/">//'
