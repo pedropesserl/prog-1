@@ -23,10 +23,8 @@ confere_arq_saida() {
 		>&2 echo "Erro: formato incorreto para $1 (deve ser .csv)"
 		exit 2
 	fi
-
-	if [ ! -f $1 ]; then
-		touch $1
-	fi
+	
+	echo "version+pmid<title<abstract<keywords" > $1
 }
 
 XML=$1
@@ -37,32 +35,68 @@ CSV=$2
 confere_arq_saida $CSV
 CSV=$(realpath $CSV)
 
-# separar os campos úteis do arquivo xml.gz
+# converter o arquivo xml.gz para o formato csv
 zcat $XML | \
 	xgrep -tx "//PMID|//ArticleTitle|//Abstract|//MeshHeadingList" | \
-	# o sed acha um campo PMID, seguido de um campo ArticleTitle, seguido
-	# de um campo Abstract, e imprime. Se houver um campo MeshHeadingList
-	# após o Abstract, imprime também; se não, insere um vazio.
+	# o sed acha os campos úteis -- PMID seguido de ArticleTitle seguido
+	# de Abstract, seguido ou não de MeshHeadingList -- e converte no
+	# formato csv. No caso de não haver MeshHeadingList para um dado artigo,
+	# cria um campo vazio (<).
 	sed -En '
-	/<PMID/{
+	/PMID/{
+		s/<PMID Version="//;
+		s/">//;
+		s/<\/PMID>//;
 		N;
-		/<ArticleTitle>/{
+
+		/ArticleTitle/{
+			s/<ArticleTitle>/</;
+			s/<\/ArticleTitle>//;
 			N;
-			/<Abstract>/{
+
+			/Abstract/{
+				s/<Abstract> *<AbstractText>/</;
+				s/<\/AbstractText> *<\/Abstract>//;
 				p;
 				n;
-				/<MeshHeadingList>/{
+
+				/MeshHeadingList/{
+					s/ *<MeshHeading> *<Descriptor[^>]*>//g;
+					s/(<\/DescriptorName>|<\/QualifierName>) *(<Qualifier[^>]*>|<\/MeshHeading>)/, /g;
+					s/<MeshHeadingList>/</;
+					s/(, *|)<\/MeshHeadingList>//;
 					p;
 				};
-				/<PMID/{
-					i <MeshHeadingList></MeshHeadingList>
+
+				/PMID/{
+					i <
 				}
 			}
 		}
-	}' > $CSV
+	}' >> $CSV
 
-# /<[^>]*>/
+# converter para o formato csv
+# sed -i '
+# 	/PMID/{
+# 		s/<PMID Version="//;
+# 		s/">//;
+# 		s/<\/PMID>//;
+# 	}
 
+# 	/ArticleTitle/{
+# 		s/<ArticleTitle>/</;
+# 		s/<\/ArticleTitle>//;
+# 	}
 
-# inserir a linha de cabeçalho no arquivo
-sed -i '1i version+pmid<title<abstract<keywords' $CSV
+# 	/Abstract/{
+# 		s/<Abstract> *<AbstractText>/</;
+# 		s/<\/AbstractText> *<\/Abstract>//;
+# 	}
+
+# 	/MeshHeadingList/{
+# 		s/ *<MeshHeading> *<Descriptor[^>]*>//g;
+# 		s/\(<\/DescriptorName>\|<\/QualifierName>\) *\(<Qualifier[^>]*>\|<\/MeshHeading>\)/, /g;
+# 		s/<MeshHeadingList>/</;
+# 		s/\(, *\|\)<\/MeshHeadingList>//;
+# 	}' $CSV
+
