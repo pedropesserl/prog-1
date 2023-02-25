@@ -24,7 +24,9 @@ confere_arq_saida() {
 		exit 2
 	fi
 
-	echo "version+pmid<title<abstract<keywords" > $1
+	if [ ! -f $1 ]; then
+		touch $1
+	fi
 }
 
 XML=$1
@@ -40,7 +42,7 @@ zcat $XML | \
 	xgrep -tx "//PMID|//ArticleTitle|//Abstract|//MeshHeadingList" | \
 	# o sed acha um campo PMID, seguido de um campo ArticleTitle, seguido
 	# de um campo Abstract, e imprime. Se houver um campo MeshHeadingList
-	# após o Abstract, imprime também.
+	# após o Abstract, imprime também; se não, insere um vazio.
 	sed -En '
 	/<PMID/{
 		N;
@@ -51,8 +53,16 @@ zcat $XML | \
 				n;
 				/<MeshHeadingList>/{
 					p;
+				};
+				/<PMID/{
+					i <MeshHeadingList></MeshHeadingList>
 				}
 			}
 		}
-	}' >> $CSV
-# grep 'PMID' ARQUIVO_COM_CAMPOS_SEPARADOS | awk '{ print substr($0, 16, length($0)-22) }' | sed 's/">//'
+	}' > $CSV
+
+# /<[^>]*>/
+
+
+# inserir a linha de cabeçalho no arquivo
+sed -i '1i version+pmid<title<abstract<keywords' $CSV
