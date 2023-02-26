@@ -37,66 +37,49 @@ CSV=$(realpath $CSV)
 
 # converter o arquivo xml.gz para o formato csv
 zcat $XML | \
-	xgrep -tx "//PMID|//ArticleTitle|//Abstract|//MeshHeadingList" | \
-	# o sed acha os campos úteis -- PMID seguido de ArticleTitle seguido
-	# de Abstract, seguido ou não de MeshHeadingList -- e converte no
-	# formato csv. No caso de não haver MeshHeadingList para um dado artigo,
-	# cria um campo vazio (<).
-	sed -En '
-	/PMID/{
-		s/<PMID Version="//;
-		s/">//;
-		s/<\/PMID>//;
-		N;
+xgrep -tx "//PMID|//ArticleTitle|//Abstract|//MeshHeadingList" | \
+# o sed acha os campos úteis -- PMID seguido de ArticleTitle seguido
+# de Abstract, seguido ou não de MeshHeadingList -- e converte no
+# formato csv. No caso de não haver MeshHeadingList para um dado artigo,
+# insere uma linha vazia.
+sed -En '
+:x; /<PMID/{
+	s/<PMID Version="//;
+	s/">//;
+	s/<\/PMID>/</;
+	x;
+	n;
 
-		/ArticleTitle/{
-			s/<ArticleTitle>/</;
-			s/<\/ArticleTitle>//;
-			N;
+	/<ArticleTitle>/{
+		s/<ArticleTitle>//;
+		s/ *<\/ArticleTitle>/</;
+		H;
+		n;
 
-			/Abstract/{
-				s/<Abstract> *<AbstractText>/</;
-				s/<\/AbstractText> *<\/Abstract>//;
+		/<Abstract>/{
+			s/(<Abstract>|<AbstractText[^>]*>) *//g;
+			s/ *<\/AbstractText> *(|<CopyrightInformation>)/, /g;
+			s/(,|<\/CopyrightInformation>) *<\/Abstract>/</g;
+			s/(<sup>|<sub>)//g;
+			s/(<\/sup>|<\/sub>)/, /g;
+			H;
+			x;
+			p;
+			n;
+
+			/<MeshHeadingList>/{
+				s/(<\/DescriptorName>|<\/QualifierName>) *(<Qualifier[^>]*>|<\/MeshHeading> *)/, /g;
+				s/(<MeshHeadingList> *|<MeshHeading> *<Descriptor[^>]*>|(, *|)<\/MeshHeadingList>)//g;
 				p;
-				n;
+				d;
+			};
 
-				/MeshHeadingList/{
-					s/ *<MeshHeading> *<Descriptor[^>]*>//g;
-					s/(<\/DescriptorName>|<\/QualifierName>) *(<Qualifier[^>]*>|<\/MeshHeading>)/, /g;
-					s/<MeshHeadingList>/</;
-					s/(, *|)<\/MeshHeadingList>//;
-					p;
-				};
+			i \
 
-				/PMID/{
-					i <
-				}
-			}
-		}
-	}' >> $CSV
-
-# converter para o formato csv
-# sed -i '
-# 	/PMID/{
-# 		s/<PMID Version="//;
-# 		s/">//;
-# 		s/<\/PMID>//;
-# 	}
-
-# 	/ArticleTitle/{
-# 		s/<ArticleTitle>/</;
-# 		s/<\/ArticleTitle>//;
-# 	}
-
-# 	/Abstract/{
-# 		s/<Abstract> *<AbstractText>/</;
-# 		s/<\/AbstractText> *<\/Abstract>//;
-# 	}
-
-# 	/MeshHeadingList/{
-# 		s/ *<MeshHeading> *<Descriptor[^>]*>//g;
-# 		s/\(<\/DescriptorName>\|<\/QualifierName>\) *\(<Qualifier[^>]*>\|<\/MeshHeading>\)/, /g;
-# 		s/<MeshHeadingList>/</;
-# 		s/\(, *\|\)<\/MeshHeadingList>//;
-# 	}' $CSV
-
+			bx;
+		};
+		bx;
+	};
+	bx;
+}' | \
+awk 'BEGIN {RS=""} {gsub(/<\n/, "<", $0); print $0}' >> $CSV
