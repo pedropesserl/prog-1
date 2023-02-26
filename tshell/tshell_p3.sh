@@ -60,8 +60,6 @@ sed -En '
 			s/(<Abstract>|<AbstractText[^>]*>) *//g;
 			s/ *<\/AbstractText> *(|<CopyrightInformation>)/, /g;
 			s/(,|<\/CopyrightInformation>) *<\/Abstract>/</g;
-			s/(<sup>|<sub>)//g;
-			s/(<\/sup>|<\/sub>)/, /g;
 			H;
 			x;
 			p;
