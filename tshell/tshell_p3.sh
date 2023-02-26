@@ -1,5 +1,8 @@
 #!/bin/bash
 
+XGREP=xgrep
+command xgrep &> /dev/null || XGREP=/home/soft/xgrep/bin/xgrep
+
 if [ $# -ne 2 ]; then
 	>&2 echo "Uso: ./tshell_p3.sh <axml> <acsv>"
 	exit 1
@@ -37,7 +40,7 @@ CSV=$(realpath $CSV)
 
 # converter o arquivo xml.gz para o formato csv
 zcat $XML | \
-xgrep -tx "//PMID|//ArticleTitle|//Abstract|//MeshHeadingList" | \
+$XGREP -tx "//PMID|//ArticleTitle|//Abstract|//MeshHeadingList" | \
 # o sed acha os campos úteis -- PMID seguido de ArticleTitle seguido
 # de Abstract, seguido ou não de MeshHeadingList -- e converte no
 # formato csv. No caso de não haver MeshHeadingList para um dado artigo,
@@ -80,4 +83,5 @@ sed -En '
 	};
 	bx;
 }' | \
+# remover as quebras de linhas necessárias
 awk 'BEGIN {RS=""} {gsub(/<\n/, "<", $0); print $0}' >> $CSV
