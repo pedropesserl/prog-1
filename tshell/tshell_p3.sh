@@ -4,30 +4,30 @@ XGREP=xgrep
 command xgrep &> /dev/null || XGREP=/home/soft/xgrep/bin/xgrep
 
 if [ $# -ne 2 ]; then
-	>&2 echo "Uso: ./tshell_p3.sh <axml> <acsv>"
-	exit 1
+    >&2 echo "Uso: ./tshell_p3.sh <axml> <acsv>"
+    exit 1
 fi
 
 confere_arq_entrada() {
-	IFS=. read -r NOME EXT <<< $1
-	if [ $EXT != "xml.gz" ]; then
-		>&2 echo "Erro: formato incorreto para $1 (deve ser .xml.gz)"
-		exit 2
-	fi
-	if [ ! -f $1 ]; then
-		>&2 echo "Erro: $1 não existe"
-		exit 3
-	fi
+    IFS=. read -r NOME EXT <<< $1
+    if [ $EXT != "xml.gz" ]; then
+        >&2 echo "Erro: formato incorreto para $1 (deve ser .xml.gz)"
+        exit 2
+    fi
+    if [ ! -f $1 ]; then
+        >&2 echo "Erro: $1 não existe"
+        exit 3
+    fi
 }
 
 confere_arq_saida() {
-	IFS=. read -r NOME EXT <<< $1
-	if [ $EXT != "csv" ]; then
-		>&2 echo "Erro: formato incorreto para $1 (deve ser .csv)"
-		exit 2
-	fi
-	
-	echo "version+pmid<title<abstract<keywords" > $1
+    IFS=. read -r NOME EXT <<< $1
+    if [ $EXT != "csv" ]; then
+        >&2 echo "Erro: formato incorreto para $1 (deve ser .csv)"
+        exit 2
+    fi
+    
+    echo "version+pmid<title<abstract<keywords" > $1
 }
 
 XML=$1
@@ -47,41 +47,41 @@ $XGREP -tx "//PMID|//ArticleTitle|//Abstract|//MeshHeadingList" | \
 # insere uma linha vazia.
 sed -En '
 :x; /<PMID/{
-	s/<PMID Version="//;
-	s/">//;
-	s/<\/PMID>/</;
-	x;
-	n;
+    s/<PMID Version="//;
+    s/">//;
+    s/<\/PMID>/</;
+    x;
+    n;
 
-	/<ArticleTitle>/{
-		s/<ArticleTitle>//;
-		s/ *<\/ArticleTitle>/</;
-		H;
-		n;
+    /<ArticleTitle>/{
+        s/<ArticleTitle>//;
+        s/ *<\/ArticleTitle>/</;
+        H;
+        n;
 
-		/<Abstract>/{
-			s/(<Abstract>|<AbstractText[^>]*>) *//g;
-			s/ *<\/AbstractText> *(|<CopyrightInformation>)/, /g;
-			s/(,|<\/CopyrightInformation>) *<\/Abstract>/</g;
-			H;
-			x;
-			p;
-			n;
+        /<Abstract>/{
+            s/(<Abstract>|<AbstractText[^>]*>) *//g;
+            s/ *<\/AbstractText> *(|<CopyrightInformation>)/, /g;
+            s/(,|<\/CopyrightInformation>) *<\/Abstract>/</g;
+            H;
+            x;
+            p;
+            n;
 
-			/<MeshHeadingList>/{
-				s/(<\/DescriptorName>|<\/QualifierName>) *(<Qualifier[^>]*>|<\/MeshHeading> *)/, /g;
-				s/(<MeshHeadingList> *|<MeshHeading> *<Descriptor[^>]*>|(, *|)<\/MeshHeadingList>)//g;
-				p;
-				d;
-			};
+            /<MeshHeadingList>/{
+                s/(<\/DescriptorName>|<\/QualifierName>) *(<Qualifier[^>]*>|<\/MeshHeading> *)/, /g;
+                s/(<MeshHeadingList> *|<MeshHeading> *<Descriptor[^>]*>|(, *|)<\/MeshHeadingList>)//g;
+                p;
+                d;
+            };
 
-			i \
+            i \
 
-			bx;
-		};
-		bx;
-	};
-	bx;
+            bx;
+        };
+        bx;
+    };
+    bx;
 }' | \
 # remover as quebras de linhas necessárias
 awk 'BEGIN {RS=""} {gsub(/<\n/, "<", $0); print $0}' >> $CSV
