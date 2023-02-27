@@ -1,6 +1,6 @@
 typedef struct {
-	int num;
-	int den;
+    int num;
+    int den;
 } racional;
 
 /* le um numero racional (dois inteiros) */

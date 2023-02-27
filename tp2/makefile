@@ -13,4 +13,4 @@ lib_racionais.o: lib_racionais.c
 	$(CC) -c $(OPCOES) lib_racionais.c
 
 clean:
-		rm -f ./*.o
+	rm -f ./*.o tp2

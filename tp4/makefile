@@ -18,4 +18,4 @@ tp4.o: tp4.c
 	$(CC) -c $(CFLAGS) tp4.c
 
 clean:
-	rm -f $(objects)
+	rm -f $(objects) tp4

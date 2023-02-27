@@ -13,4 +13,4 @@ tp3.o: tp3.c
 	$(CC) -c $(CFLAGS) tp3.c
 
 clean:
-	rm -f *.o
+	rm -f *.o tp3
